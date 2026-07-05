@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>AnimePlus - Contact Us</title>
+  <script>
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      document.documentElement.classList.add("logged-in");
+    } else {
+      document.documentElement.classList.add("logged-out");
+    }
+  </script>
+</head>
+
+<body class="contact-page">
+
+    <div id="container">
+        <header id="navbar">
+            <div id="logo">
+                <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+            </div>
+
+            <div id="homler">
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="series.html">Series</a></li>
+                    <li><a href="movies.html">Movies</a></li>
+                    <li><a href="coming.html">Coming</a></li>
+                    <li><a href="airing.html">Airing</a></li>
+                </ul>
+            </div>
+
+            <div id="login-and-search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="search" />
+                </div>
+                <button>Login</button>
+            </div>
+
+            <div id="menu">
+                <i class="bi bi-list" id="menuIcon"></i>
+            </div>
+        </header>
+
+        <div id="menuContent">
+            <!-- Shared Menu Content -->
+            <div id="profile">
+                <i class="bi bi-person-circle" id="userIcon"></i>
+                <label for="userIcon">UserName</label>
+            </div>
+            <div id="lists">
+                <div id="list1">
+                    <button><i class="fa-solid fa-list-ul"></i> My List</button>
+                    <button onclick="window.location.href='favorites.html'"><i class="fa-solid fa-heart"></i> My Favorite List</button>
+                    <button onclick="window.location.href='recommendations.html'"><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</button>
+                    <button onclick="window.location.href='mood.html'"><i class="fa-solid fa-moon"></i> Anime Mood</button>
+                    <button><i class="fa-solid fa-newspaper"></i> News</button>
+                    <button onclick="window.location.href='contact.html'"><i class="fa-solid fa-address-card"></i> Contact Us</button>
+                </div>
+                <div id="list2">
+                    <p>Follow us on social media</p>
+                    <div class="social-popup">
+                        <a href="#"><span>Facebook</span></a>
+                        <a href="https://linkedin.com/in/yousef-ayoubi-2a29a93b6" target="_blank"><span>LinkedIn</span></a>
+                        <a href="#"><span>Instagram</span></a>
+                        <a href="#"><span>Telegram</span></a>
+                        <a href="#"><span>Youtube</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shared Login Modal -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <form id="loginform">
+                    <span class="close">&times;</span>
+                    <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                    <div id="inputs">
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password" required>
+                        <a href="#" id="forgotPasswordLink">forgot password?</a>
+                    </div>
+                    <button type="submit">Login</button>
+                    <a href="#" id="gotosignup">don't have an account?</a>
+                </form>
+                <form id="signupform">
+                    <div id="sign">
+                        <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                        <span class="close">&times;</span>
+                        <input type="text" placeholder="UserName" required>
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password 1" required>
+                        <input type="password" placeholder="Password 2" required>
+                        <button id="signButton" type="submit">Sign Up</button>
+            <a href="#" id="gotologinFromSignup" style="display: block; font-size: 14px; color: #ac4a92; text-decoration: none; margin-top: 15px; text-align: center;">already have an account? Login</a>
+          </div>
+        </form>
+                <div id="items">
+          <p>Or</p>
+          <a href="/api/auth/google" class="google-login-btn">
+            <i class="fa-brands fa-google"></i> Sign in with Google
+          </a>
+        </div>
+            </div>
+        </div>
+
+        <!-- Contact Us Content -->
+        <main class="contact-section">
+            <div class="contact-header">
+                <h1 class="contact-title">Get in Touch with Our Team</h1>
+                <p class="contact-subtitle">Have suggestions, questions, or just want to say hi? We'd love to hear from you.</p>
+            </div>
+            
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="info-card">
+                        <i class="fa-solid fa-envelope"></i>
+                        <h3>Email Us</h3>
+                        <p>Support@animeplus.com</p>
+                        <p>DevTeam@animeplus.com</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="fa-solid fa-code"></i>
+                        <h3>For Developers</h3>
+                        <p>Interested in joining us?</p>
+                        <p>Send us your portfolio!</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        <h3>Feedback</h3>
+                        <p>Your suggestions help us</p>
+                        <p>build a better platform.</p>
+                    </div>
+                </div>
+
+                <div class="contact-form-container">
+                    <form class="contact-form" id="contactForm">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="contactName">Name</label>
+                                <input type="text" id="contactName" placeholder="Your Name" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="contactEmail">Email</label>
+                                <input type="email" id="contactEmail" placeholder="Your Email Address" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="contactSubject">Subject</label>
+                            <input type="text" id="contactSubject" placeholder="How can we help you?" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="contactMessage">Message</label>
+                            <textarea id="contactMessage" rows="5" placeholder="Write your message here..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <span>Send Message</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('.submit-btn');
+            const originalHTML = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<span>Sending...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const payload = {
+                name: document.getElementById('contactName').value,
+                email: document.getElementById('contactEmail').value,
+                subject: document.getElementById('contactSubject').value,
+                message: document.getElementById('contactMessage').value
+            };
+
+            // Remove any existing inline message
+            const existingMsg = document.getElementById('contactFormMsg');
+            if(existingMsg) existingMsg.remove();
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+
+                if (response.ok) {
+                    btn.innerHTML = '<span>Sent!</span> <i class="fa-solid fa-check"></i>';
+                    btn.style.background = '#10b981';
+                    
+                    setTimeout(() => {
+                        this.reset();
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = '';
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(data.error || "Failed to send message.");
+                }
+            } catch (error) {
+                // Show error state without breaking UI
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                
+                const errorSpan = document.createElement('div');
+                errorSpan.id = 'contactFormMsg';
+                errorSpan.style.color = '#ef4444';
+                errorSpan.style.marginTop = '10px';
+                errorSpan.style.fontSize = '14px';
+                errorSpan.style.textAlign = 'center';
+                errorSpan.innerText = error.message;
+                this.appendChild(errorSpan);
+                
+                setTimeout(() => errorSpan.remove(), 5000);
+            }
+        });
+    </script>
+</body>
+
+</html>

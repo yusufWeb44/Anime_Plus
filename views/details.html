@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Detail - AnimePlus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/details.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        if (localStorage.getItem("isLoggedIn") === "true") {
+            document.documentElement.classList.add("logged-in");
+        } else {
+            document.documentElement.classList.add("logged-out");
+        }
+    </script>
+</head>
+
+<body class="details-page">
+    <div id="container">
+        <!-- Reusing Navbar for consistency -->
+        <header id="navbar">
+            <div id="logo">
+                <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+            </div>
+
+            <div id="homler">
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="series.html">Series</a></li>
+                    <li><a href="movies.html">Movies</a></li>
+                    <li><a href="coming.html">Coming</a></li>
+                    <li><a href="airing.html">Airing</a></li>
+                </ul>
+            </div>
+
+            <div id="login-and-search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="search" />
+                </div>
+                <button>Login</button>
+            </div>
+
+            <div id="menu">
+                <i class="bi bi-list" id="menuIcon"></i>
+            </div>
+        </header>
+
+        <div id="menuContent">
+            <div id="profile">
+                <i class="bi bi-person-circle" id="userIcon"></i>
+                <label for="userIcon">UserName</label>
+            </div>
+            <div id="lists">
+                <div id="list1">
+                    <button><i class="fa-solid fa-list-ul"></i> My List</button>
+                    <button onclick="window.location.href=\'favorites.html\'"><i class="fa-solid fa-heart"></i> My
+                        Favorite List</button>
+                    <button onclick="window.location.href=\'recommendations.html\'"><i
+                            class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</button>
+                    <button onclick="window.location.href=\'mood.html\'"><i class="fa-solid fa-moon"></i> Anime
+                        Mood</button>
+                    <button><i class="fa-solid fa-newspaper"></i> News</button>
+                    <button onclick="window.location.href=\'contact.html\'"><i class="fa-solid fa-address-card"></i>
+                        Contact Us</button>
+                </div>
+                <div id="list2">
+                    <p>Follow us on social media</p>
+                    <div class="social-popup">
+                        <a href="https://www.facebook.com/share/1AyK9zbSVH/" target="_blank"><span>Facebook</span></a>
+                        <a href="https://linkedin.com/in/yousef-ayoubi-2a29a93b6"
+                            target="_blank"><span>LinkedIn</span></a>
+                        <a href="https://www.instagram.com/u5.e.f?igsh=dGs3eHE4Z3poNm8z"
+                            target="_blank"><span>Instagram</span></a>
+                        <a href="#" aria-label="Facebook" target="_blank"
+                            rel="noopener noreferrer"><span>Telegram</span></a>
+                        <a href="https://youtube.com/@yousefayoubi8638?si=SMDpQuAAJgVodUGz"
+                            target="_blank"><span>Youtube</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login/Signup Modal (Shared) -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <form id="loginform">
+                    <span class="close">&times;</span>
+                    <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                    <div id="inputs">
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password" required>
+                        <a href="#" id="forgotPasswordLink">forgot password?</a>
+                    </div>
+                    <button type="submit">Login</button>
+                    <a href="#" id="gotosignup">don\'t have an account?</a>
+                </form>
+                <form id="signupform">
+                    <div id="sign">
+                        <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                        <span class="close">&times;</span>
+                        <input type="text" placeholder="UserName" required>
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password 1" required>
+                        <input type="password" placeholder="Password 2" required>
+                        <button id="signButton" type="submit">Sign Up</button>
+                        <a href="#" id="gotologinFromSignup"
+                            style="display: block; font-size: 14px; color: #ac4a92; text-decoration: none; margin-top: 15px; text-align: center;">already
+                            have an account? Login</a>
+                    </div>
+                </form>
+                <div id="items">
+                    <p>Or</p>
+                    <a href="/api/auth/google" class="google-login-btn">
+                        <i class="fa-brands fa-google"></i> Sign in with Google
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="back-to-gallery-wrapper">
+            <button id="backToGallery" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Gallery</button>
+        </div>
+
+        <main class="details-container">
+            <div id="detailsBackdrop" class="details-backdrop"></div>
+
+            <div class="details-content">
+                <div class="poster-section">
+                    <img id="detailPoster" src="" alt="Anime Poster">
+                    <div class="watch-actions">
+                        <button id="trailerBtn" class="primary-btn"><i class="fa-solid fa-play"></i> Watch
+                            Trailer</button>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h1 id="detailTitle">Loading...</h1>
+
+                    <div class="meta-row">
+                        <div class="ratings-group">
+                            <div class="rating-badge mal-rating">
+                                <i class="fa-solid fa-star"></i>
+                                <span id="detailRating">0.0</span>
+                                <span class="rating-label">MAL</span>
+                            </div>
+                            <div class="rating-badge user-rating-badge" id="userRatingBadge" style="display: none;">
+                                <i class="fa-solid fa-star"></i>
+                                <span id="userRatingValue">—</span>
+                                <span class="rating-label"></span>
+                            </div>
+                        </div>
+                        <div id="detailCategories" class="categories"></div>
+                        <div id="detailStudio" class="studio-info">
+                            <h3>Studio :</h3>
+                            <span id="studioName">Studio</span> / <span id="releaseYear">Year</span>
+                        </div>
+                    </div>
+
+                    <div class="user-interaction-box">
+                        <div class="user-rating-slider">
+                            <span>Rate this Anime:</span>
+                            <div class="rating-slider-container">
+                                <input type="range" id="userRatingRange" min="0" max="10" step="0.5" value="0">
+                                <span class="rating-value" id="ratingDisplay">0.0</span>
+                            </div>
+                        </div>
+
+                        <div class="list-buttons">
+                            <div class="watchlist-dropdown-container">
+                                <button id="addBtn" class="btn-outline"><i class="fa-solid fa-plus"></i> My
+                                    List</button>
+                                <div id="watchlistDropdown" class="watchlist-dropdown-menu">
+                                    <button data-status="watching"><i class="fa-solid fa-circle-play"
+                                            style="color: #3b82f6;"></i> Watching</button>
+                                    <button data-status="plan_to_watch"><i class="fa-solid fa-calendar-days"
+                                            style="color: #f59e0b;"></i> Plan to Watch</button>
+                                    <button data-status="completed"><i class="fa-solid fa-circle-check"
+                                            style="color: #10b981;"></i> Completed</button>
+                                    <button data-status="on_hold"><i class="fa-solid fa-pause"
+                                            style="color: #8b5cf6;"></i> On Hold</button>
+                                    <button data-status="dropped"><i class="fa-solid fa-circle-xmark"
+                                            style="color: #ef4444;"></i> Dropped</button>
+                                    <hr class="dropdown-divider">
+                                    <button id="removeWatchlistBtn" class="remove-btn"><i
+                                            class="fa-solid fa-trash-can"></i> Remove from List</button>
+                                </div>
+                            </div>
+                            <button id="favBtn" class="btn-outline"><i class="fa-regular fa-heart"></i> Add
+                                Favorite</button>
+                        </div>
+                    </div>
+
+                    <div class="synopsis-box">
+                        <h2>Synopsis</h2>
+                        <p id="detailSynopsis">Loading anime description...</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Related Content -->
+            <section id="relatedSection" style="display: none;">
+                <div class="home-section" style="padding: 20px 40px;">
+                    <h2 class="section-title" style="margin-bottom: 20px;">Related Content</h2>
+                    <div id="relatedContent" class="home-gallery"></div>
+                    <div class="show-more-container" style="text-align: center; margin-top: 30px;">
+                        <button id="relatedShowMore" class="show-more-btn" style="display: none;">Show More</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- You May Also Like -->
+            <section id="recommendationsSection" style="display: none;">
+                <div class="home-section" style="padding: 20px 40px;">
+                    <h2 class="section-title" style="margin-bottom: 20px;">You May Also Like</h2>
+                    <div id="recommendationsContent" class="home-gallery"></div>
+                    <div class="show-more-container" style="text-align: center; margin-top: 30px;">
+                        <button id="recommendationsShowMore" class="show-more-btn" style="display: none;">Show More</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Trailer Modal -->
+        <div id="trailerModal" class="trailer-modal">
+            <div class="trailer-modal-content">
+                <span class="trailer-close">&times;</span>
+                <div class="trailer-container" id="trailerContainer">
+                    <div id="trailerFrame"></div>
+                </div>
+                <div class="trailer-fallback" id="trailerFallback" style="display: none;">
+                    <i class="fa-brands fa-youtube fallback-icon"></i>
+                    <h3>Trailer Unavailable</h3>
+                    <p>This trailer cannot be embedded or is restricted by the owner.</p>
+                    <a id="watchOnYoutubeBtn" href="#" target="_blank" class="primary-btn" style="text-decoration: none; width: auto; display: inline-flex;"><i class="fa-brands fa-youtube"></i> Watch on YouTube</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/details.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+
+</html>

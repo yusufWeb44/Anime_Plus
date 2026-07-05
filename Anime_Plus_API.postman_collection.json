@@ -1,0 +1,1271 @@
+{
+  "info": {
+    "_postman_id": "8e3c54d1-9f93-4a6c-94df-7f61bcf7ebcd",
+    "name": "Anime Plus API",
+    "description": "Collection of all API endpoints for the Anime Ingestion & User Platform, including Authentication, Anime Content fetching, User Actions (Favorites, Watchlist, Ratings, Profile), and Admin Ingestion & Maintenance.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication (المصادقة)",
+      "item": [
+        {
+          "name": "Register (إنشاء حساب جديد)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.accessToken) {",
+                  "    pm.collectionVariables.set(\"access_token\", response.accessToken);",
+                  "    console.log(\"Access token automatically updated from Registration!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"yusuf_gamer\",\n  \"email\": \"yusuf@example.com\",\n  \"password\": \"OtakuPass123!\",\n  \"confirmPassword\": \"OtakuPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Creates a new local user account. The password must contain at least 8 characters, with 1 uppercase letter and 1 number."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (تسجيل الدخول)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.accessToken) {",
+                  "    pm.collectionVariables.set(\"access_token\", response.accessToken);",
+                  "    console.log(\"Access token automatically updated from Login!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"otaku@example.com\",\n  \"password\": \"OtakuPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in the user and returns an accessToken. A refreshToken is also returned as an HTTP-only cookie."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me (بيانات المستخدم الحالي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retrieves information about the currently authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token (تحديث الرمز)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.accessToken) {",
+                  "    pm.collectionVariables.set(\"access_token\", response.accessToken);",
+                  "    console.log(\"Access token automatically refreshed and updated!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Rotates refresh tokens and returns a new access token. Requires the refreshToken to be sent via cookie."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout (تسجيل الخروج)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logs out the user and clears the refreshToken cookie."
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke All Devices (تسجيل الخروج من كل الأجهزة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/revoke-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "revoke-all"
+              ]
+            },
+            "description": "Logs out the user from all devices by deleting all active refresh tokens in the database."
+          },
+          "response": []
+        },
+        {
+          "name": "Google OAuth Login (تسجيل دخول جوجل)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "google"
+              ]
+            },
+            "description": "Initiates the Google OAuth 2.0 flow. Run this in a web browser."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Anime Content (محتوى الأنمي)",
+      "item": [
+        {
+          "name": "Get Series (عرض المسلسلات)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/series",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "series"
+              ]
+            },
+            "description": "Fetches all airing or released anime series in a randomized order."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movies (عرض الأفلام)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ]
+            },
+            "description": "Fetches all released anime movies in a randomized order."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upcoming (عرض الأنميات القادمة)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coming",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coming"
+              ]
+            },
+            "description": "Fetches all upcoming anime, sorted by release date."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Anime Details (عرض تفاصيل أنمي محدد)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/anime/:type/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "anime",
+                ":type",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "series",
+                  "description": "Can be: series, movies, or coming"
+                },
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "The numeric ID of the anime"
+                }
+              ]
+            },
+            "description": "Fetches complete details for a specific anime by type and ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Home Featured (عرض المميز بالصفحة الرئيسية)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/home-featured",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "home-featured"
+              ]
+            },
+            "description": "Fetches anime marked to be featured on the homepage slider, ordered by their feature ranking."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Top Rated (عرض الأكثر تقييماً)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/top-rated",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "top-rated"
+              ]
+            },
+            "description": "Fetches top rated items categorized into series, movies, and upcoming lists."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. User Actions & Profile (تفاعلات المستخدم والملف الشخصي)",
+      "item": [
+        {
+          "name": "Get Profile (عرض الملف الشخصي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "profile"
+              ]
+            },
+            "description": "Fetches current user's profile details including biography, location, cover image, and avatar."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile (تحديث الملف الشخصي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bio",
+                  "value": "This is my brand new bio as an anime enthusiast!",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Riyadh, Saudi Arabia",
+                  "type": "text"
+                },
+                {
+                  "key": "birthDate",
+                  "value": "2000-01-01",
+                  "type": "text"
+                },
+                {
+                  "key": "avatar",
+                  "description": "User Avatar Image (Max 1)",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "coverImage",
+                  "description": "User Profile Cover Image (Max 1)",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "profile"
+              ]
+            },
+            "description": "Updates profile details. Supports bio, location, birthDate, avatar upload, and coverImage upload using multipart/form-data."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Favorites (عرض المفضلة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/favorites",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "favorites"
+              ]
+            },
+            "description": "Fetches all anime items that the current user has marked as favorite."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorite (إضافة للمفضلة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animeId\": 1,\n  \"animeType\": \"series\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/favorites/add",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "favorites",
+                "add"
+              ]
+            },
+            "description": "Adds an anime to the user's favorites. Body demands: animeId, animeType."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Favorite (حذف من المفضلة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animeId\": 1,\n  \"animeType\": \"series\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/favorites/remove",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "favorites",
+                "remove"
+              ]
+            },
+            "description": "Removes an anime from the user's favorites."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Watchlist (عرض قائمة المشاهدة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/watchlist",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "watchlist"
+              ]
+            },
+            "description": "Fetches all anime items that the current user has added to their watchlist."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Watchlist (إضافة لقائمة المشاهدة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animeId\": 1,\n  \"animeType\": \"series\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/watchlist/add",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "watchlist",
+                "add"
+              ]
+            },
+            "description": "Adds an anime to the user's watchlist."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Watchlist (حذف من قائمة المشاهدة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animeId\": 1,\n  \"animeType\": \"series\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/watchlist/remove",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "watchlist",
+                "remove"
+              ]
+            },
+            "description": "Removes an anime from the user's watchlist."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Rating (تحديث التقييم)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animeId\": 1,\n  \"animeType\": \"series\",\n  \"rating\": 9.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/rating",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "rating"
+              ]
+            },
+            "description": "Submits or updates the user's score/rating for a specific anime."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Actions (الحصول على تفاعلات المستخدم مع أنمي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/actions/:animeType/:animeId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "actions",
+                ":animeType",
+                ":animeId"
+              ],
+              "variable": [
+                {
+                  "key": "animeType",
+                  "value": "series"
+                },
+                {
+                  "key": "animeId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Checks the state of current user actions (favorite status, watchlist status, rating score) for a specific anime."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Panel (لوحة التحكم للمشرفين)",
+      "item": [
+        {
+          "name": "Import Trending Anime (استيراد الأنميات الشائعة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/trending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "trending"
+              ]
+            },
+            "description": "Triggers batch import of trending anime series from AniList GraphQL API. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Import Upcoming Anime (استيراد الأنميات القادمة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/upcoming",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "upcoming"
+              ]
+            },
+            "description": "Triggers batch import of upcoming anime from AniList GraphQL API. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Import Movies (استيراد أفلام الأنمي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/movies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "movies"
+              ]
+            },
+            "description": "Triggers batch import of anime movies from AniList GraphQL API. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Active Anime (تحديث الأنميات النشطة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-active"
+              ]
+            },
+            "description": "Runs a maintenance job refreshing metadata of actively airing anime items in the database. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh All Metadata (تحديث شامل لبيانات الأنميات)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-all"
+              ]
+            },
+            "description": "Runs a batch maintenance job refreshing all stored anime metadata from AniList. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Series (تحديث بيانات المسلسلات)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-series",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-series"
+              ]
+            },
+            "description": "Runs a batch maintenance job refreshing metadata of stored anime series in the database. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Movies (تحديث بيانات الأفلام)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-movies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-movies"
+              ]
+            },
+            "description": "Runs a batch maintenance job refreshing metadata of stored anime movies in the database. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Upcoming (تحديث بيانات الأنميات القادمة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-upcoming",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-upcoming"
+              ]
+            },
+            "description": "Runs a batch maintenance job refreshing metadata of stored upcoming anime in the database. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Import Airing Anime (استيراد الأنميات التي تعرض حالياً)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/airing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "airing"
+              ]
+            },
+            "description": "Triggers batch import of currently airing anime from AniList GraphQL API. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Airing (تحديث بيانات الأنميات التي تعرض حالياً)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/maintenance/refresh-airing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "refresh-airing"
+              ]
+            },
+            "description": "Runs a batch maintenance job refreshing metadata of stored airing anime in the database. (Requires admin role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Anime Status (تحديث حالة الأنمي يدوياً)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"airing\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/anime/:id/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "anime",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Manually updates the status of an anime. Allowed values: 'upcoming', 'airing', 'released'."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_access_token_here",
+      "type": "string"
+    }
+  ]
+}

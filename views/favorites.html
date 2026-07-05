@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>AnimePlus - My Favorites</title>
+  <script>
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      document.documentElement.classList.add("logged-in");
+    } else {
+      document.documentElement.classList.add("logged-out");
+    }
+  </script>
+</head>
+
+<body class="favorites-page">
+
+    <div id="container">
+        <header id="navbar">
+            <div id="logo">
+                <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+            </div>
+
+            <div id="homler">
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="series.html">Series</a></li>
+                    <li><a href="movies.html">Movies</a></li>
+                    <li><a href="coming.html">Coming</a></li>
+                    <li><a href="airing.html">Airing</a></li>
+                </ul>
+            </div>
+
+            <div id="login-and-search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="search" />
+                </div>
+                <button>Login</button>
+            </div>
+
+            <div id="menu">
+                <i class="bi bi-list" id="menuIcon"></i>
+            </div>
+        </header>
+
+        <div id="menuContent">
+            <div id="profile">
+                <i class="bi bi-person-circle" id="userIcon"></i>
+                <label for="userIcon">UserName</label>
+            </div>
+            <div id="lists">
+                <div id="list1">
+                    <button><i class="fa-solid fa-list-ul"></i> My List</button>
+                    <button onclick="window.location.href='favorites.html'"><i class="fa-solid fa-heart"></i> My Favorite List</button>
+                    <button onclick="window.location.href='recommendations.html'"><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</button>
+                    <button onclick="window.location.href='mood.html'"><i class="fa-solid fa-moon"></i> Anime Mood</button>
+                    <button><i class="fa-solid fa-newspaper"></i> News</button>
+                    <button onclick="window.location.href='contact.html'"><i class="fa-solid fa-address-card"></i> Contact Us</button>
+                </div>
+                <div id="list2">
+                    <p>Follow us on social media</p>
+                    <div class="social-popup">
+                        <a href="https://www.facebook.com/share/1AyK9zbSVH/" target="_blank"><span>Facebook</span></a>
+                        <a href="https://linkedin.com/in/yousef-ayoubi-2a29a93b6" target="_blank"><span>LinkedIn</span></a>
+                        <a href="https://www.instagram.com/u5.e.f?igsh=dGs3eHE4Z3poNm8z" target="_blank"><span>Instagram</span></a>
+                        <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><span>Telegram</span></a>
+                        <a href="https://youtube.com/@yousefayoubi8638?si=SMDpQuAAJgVodUGz" target="_blank"><span>Youtube</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login/Signup Modal (Shared) -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <form id="loginform">
+                    <span class="close">&times;</span>
+                    <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                    <div id="inputs">
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password" required>
+                        <a href="#" id="forgotPasswordLink">forgot password?</a>
+                    </div>
+                    <button type="submit">Login</button>
+                    <a href="#" id="gotosignup">don't have an account?</a>
+                </form>
+                <form id="signupform">
+                    <div id="sign">
+                        <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+                        <span class="close">&times;</span>
+                        <input type="text" placeholder="UserName" required>
+                        <input type="email" placeholder="Email" required>
+                        <input type="password" placeholder="Password 1" required>
+                        <input type="password" placeholder="Password 2" required>
+                        <button id="signButton" type="submit">Sign Up</button>
+            <a href="#" id="gotologinFromSignup" style="display: block; font-size: 14px; color: #ac4a92; text-decoration: none; margin-top: 15px; text-align: center;">already have an account? Login</a>
+          </div>
+        </form>
+                <div id="items">
+          <p>Or</p>
+          <a href="/api/auth/google" class="google-login-btn">
+            <i class="fa-brands fa-google"></i> Sign in with Google
+          </a>
+        </div>
+            </div>
+        </div>
+
+        <!-- Favorites Content -->
+        <main class="home-section">
+            <div class="user-list-header">
+                <h1 class="section-title"><i class="fa-solid fa-heart"></i> My Favorites</h1>
+                <p class="user-list-subtitle">Your favorite anime collection</p>
+            </div>
+            <div id="userListGallery" class="user-gallery home-gallery"></div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <i class="fa-solid fa-heart-crack"></i>
+                <h2>No favorites yet</h2>
+                <p>Start adding your favorite anime!</p>
+                <a href="series.html" class="explore-btn"><i class="fa-solid fa-compass"></i> Explore Series</a>
+        </main>
+    </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/userlist.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+
+</html>

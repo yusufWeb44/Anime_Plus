@@ -1,0 +1,690 @@
+/* =============================================
+   MOBILE RESPONSIVENESS OVERRIDES (responsive.css)
+   
+   Rules:
+   - ALL styles are inside max-width media queries
+   - Desktop is NEVER affected
+   - No existing CSS files are modified
+   ============================================= */
+
+/* =========================================
+   DESKTOP SAFETY: Force-hide mobile elements
+   on screens wider than 1024px
+   ========================================= */
+@media (min-width: 1025px) {
+  .mobile-menu-overlay {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .mobile-menu-close {
+    display: none !important;
+  }
+
+  .mobile-homler {
+    display: none !important;
+  }
+}
+
+/* -------------------------------------
+   Tablets (Max 1024px)
+   ------------------------------------- */
+@media (max-width: 1024px) {
+
+  /* === Overlay === */
+  .mobile-menu-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(3px) !important;
+    z-index: 999 !important;
+    /* Ensure it is behind #menuContent (10001) */
+    /* DEFAULT: fully hidden and non-interactive */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+  }
+
+  .mobile-menu-overlay.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  /* === Close Button === */
+  .mobile-menu-close {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    padding: 12px 20px !important;
+    font-size: 28px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    cursor: pointer !important;
+    transition: color 0.2s ease !important;
+    line-height: 1 !important;
+  }
+
+  .mobile-menu-close:hover {
+    color: #ac4a92 !important;
+  }
+
+  /* === Mobile Nav Links (cloned from #homler) === */
+  .mobile-homler {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-bottom: 1px solid rgba(172, 74, 146, 0.15) !important;
+  }
+
+  .mobile-homler ul {
+    list-style: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .mobile-homler ul li {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* === UNIFIED sidebar item style === */
+  .mobile-homler ul a,
+  #list1 button {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(172, 74, 146, 0.1) !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    padding: 12px 22px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 14px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+    letter-spacing: 0.3px !important;
+    font-family: inherit !important;
+    text-align: left !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .mobile-homler ul a::after {
+    display: none !important;
+  }
+
+  .mobile-homler ul a:hover,
+  .mobile-homler ul a.active,
+  #list1 button:hover {
+    background: rgba(172, 74, 146, 0.12) !important;
+    color: #c06aaa !important;
+  }
+
+  #list1 button i {
+    font-size: 16px !important;
+    width: 20px !important;
+    text-align: center !important;
+    color: #ac4a92 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* === Hide desktop nav on tablets === */
+  #homler {
+    display: none !important;
+  }
+
+  #navbar {
+    padding: 10px 20px !important;
+  }
+
+  /* === Sidebar dimensions === */
+  #menuContent {
+    width: 300px !important;
+    right: -300px !important;
+    max-width: 82vw !important;
+    overflow-y: auto !important;
+  }
+
+  #menuContent.menu-open {
+    right: 0 !important;
+  }
+
+  /* === Spotlight === */
+  .spotlight-content {
+    flex-direction: column !important;
+    padding: 40px 30px !important;
+    text-align: center !important;
+    gap: 30px !important;
+  }
+
+  .spotlight-info {
+    max-width: 100% !important;
+    align-items: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .spotlight-poster-wrap {
+    width: 220px !important;
+    margin: 0 auto !important;
+  }
+
+  .spotlight-title {
+    font-size: 42px !important;
+  }
+
+  /* === Details Page === */
+  .details-content {
+    flex-direction: column !important;
+    gap: 30px !important;
+    padding: 30px 20px !important;
+  }
+
+  .poster-section {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+  }
+
+  #detailTitle {
+    font-size: 42px !important;
+    text-align: center !important;
+  }
+
+  .meta-row {
+    justify-content: center !important;
+  }
+
+  .categories {
+    justify-content: center !important;
+  }
+}
+
+/* -------------------------------------
+   Mobile (Max 768px)
+   ------------------------------------- */
+@media (max-width: 768px) {
+
+  /* === Navbar layout fix === */
+  #navbar {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    padding: 10px 15px !important;
+    gap: 0 !important;
+  }
+
+  #logo {
+    order: 1 !important;
+  }
+
+  #menu {
+    order: 2 !important;
+    margin-right: 0 !important;
+    margin-top: 5px !important;
+  }
+
+  #logo img {
+    height: 55px !important;
+    width: 130px !important;
+    scale: 1 !important;
+  }
+
+  /* === Search & Login row === */
+  #login-and-search {
+    order: 3 !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+    margin-right: 0 !important;
+  }
+
+  .search-box {
+    width: 100% !important;
+    max-width: none !important;
+    flex: 1 !important;
+  }
+
+  #search {
+    font-size: 14px !important;
+    padding-left: 2em !important;
+  }
+
+  /* === Container === */
+  #container {
+    margin: 10px 10px 40px !important;
+    min-height: 80vh !important;
+  }
+
+  /* === Spotlight === */
+  #spotlight-section {
+    padding: 20px 10px 0 !important;
+  }
+
+  /* === Profile Page === */
+  .profile-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .profile-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: -65px !important;
+  }
+
+  .profile-actions {
+    margin-top: 15px !important;
+  }
+
+  #profileUsername {
+    text-align: center !important;
+  }
+
+  .joined-badge {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  /* === Modals === */
+  .modal-content {
+    width: 92% !important;
+    padding: 25px 18px !important;
+  }
+
+  /* =============================================
+     MOBILE ANIME GALLERIES — Horizontal Scroll
+     ============================================= */
+  #seriesGallery,
+  #comingGallery,
+  #moviesGallery,
+  .user-gallery,
+  .home-gallery {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 14px !important;
+    padding: 10px 5px 18px !important;
+    /* Hide scrollbar */
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  #seriesGallery::-webkit-scrollbar,
+  #comingGallery::-webkit-scrollbar,
+  #moviesGallery::-webkit-scrollbar,
+  .user-gallery::-webkit-scrollbar,
+  .home-gallery::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* === Card sizing in horizontal scroll ===
+     Keep the card looking like the desktop design:
+     image on top, title, rating, category tags.
+     Just scaled down for mobile. */
+  #seriesGallery .anime-card,
+  #comingGallery .anime-card,
+  #moviesGallery .anime-card,
+  .user-gallery .anime-card,
+  .home-gallery .anime-card {
+    flex: 0 0 160px !important;
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    scroll-snap-align: start !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  /* Card image */
+  .anime-card img {
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+  }
+
+  /* Card info area */
+  .anime-info {
+    padding: 8px 6px !important;
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+  }
+
+  .anime-info h3 {
+    font-size: 13px !important;
+    margin-bottom: 4px !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  .anime-info p {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+    gap: 4px !important;
+  }
+
+  /* Category tags */
+  .category-tags {
+    gap: 3px !important;
+    margin-top: auto !important;
+    /* Push tags to bottom if title is short */
+  }
+
+  .category-tag {
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+    letter-spacing: 0 !important;
+  }
+
+  /* Prevent page-level horizontal overflow */
+  body {
+    overflow-x: hidden !important;
+  }
+
+  /* === General Typography & Layout === */
+  h1,
+  h2,
+  .section-title,
+  .page-title,
+  #detailTitle {
+    font-size: 22px !important;
+  }
+
+  h3 {
+    font-size: 18px !important;
+  }
+
+  /* === Filter & Sort Icons === */
+  .filter-controls {
+    gap: 8px !important;
+  }
+
+  .dropdown-toggle {
+    font-size: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .dropdown-menu {
+    font-size: 14px !important;
+  }
+
+  /* === Spotlight Section Overrides === */
+  .spotlight-content {
+    flex-direction: column-reverse !important;
+    padding: 20px 10px !important;
+    gap: 20px !important;
+    /* Allow dots to flow below content */
+    position: relative !important;
+  }
+
+  .spotlight-info {
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+
+  .spotlight-desc {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    max-height: 90px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 5 !important;
+    -webkit-box-orient: vertical !important;
+    margin: 8px 0 !important;
+  }
+
+  .spotlight-poster-wrap {
+    width: 180px !important;
+    margin: 0 auto !important;
+  }
+
+  .spotlight-title {
+    font-size: 26px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .spotlight-meta {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  .spotlight-categories {
+    justify-content: center !important;
+  }
+
+  /* === Dots: move from absolute to below the button === */
+  .spotlight-dots {
+    position: static !important;
+    transform: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+    padding-bottom: 18px !important;
+    z-index: 10 !important;
+  }
+
+  /* === Remove Show More Button === */
+  .show-more-btn {
+    display: none !important;
+  }
+}
+
+/* -------------------------------------
+   Small Mobile (Max 480px)
+   ------------------------------------- */
+@media (max-width: 480px) {
+
+  /* === Login button === */
+  #login-and-search button {
+    padding: 0 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* === Slightly smaller cards on very small screens === */
+  #seriesGallery .anime-card,
+  #comingGallery .anime-card,
+  #moviesGallery .anime-card,
+  .user-gallery .anime-card,
+  .home-gallery .anime-card {
+    flex: 0 0 140px !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    border-radius: 10px !important;
+  }
+
+  .anime-card img {
+    height: 160px !important;
+  }
+
+  .anime-info {
+    padding: 6px 4px !important;
+  }
+
+  .anime-info h3 {
+    font-size: 11px !important;
+  }
+
+  .anime-info p {
+    font-size: 10px !important;
+  }
+
+  .category-tag {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+  }
+}
+
+/* =============================================
+   MOBILE 3-ROW GALLERY SECTIONS (max 768px)
+   ============================================= */
+@media (max-width: 768px) {
+
+  /* === Section header: title left, filters right === */
+  .section-header {
+    padding: 0 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .section-title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  /* main content area for gallery pages */
+  main.home-section {
+    padding: 0 0 30px !important;
+  }
+
+  /* === Mobile Row Sections === */
+  .mobile-row-section {
+    margin-bottom: 22px;
+    padding: 0;
+  }
+
+  .mobile-row-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding: 0 12px !important;
+    margin: 0 0 8px !important;
+    text-align: left !important;
+    letter-spacing: 0.3px;
+    position: relative;
+  }
+
+  .mobile-row-title::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: #ac4a92;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* === Mobile Row Gallery (horizontal scroll) === */
+  .mobile-row-gallery {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 10px !important;
+    padding: 4px 12px 12px !important;
+    /* Show right edge of last card for scroll hint */
+    scroll-snap-type: x proximity !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .mobile-row-gallery::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Cards in mobile rows */
+  .mobile-row-gallery .anime-card {
+    flex: 0 0 148px !important;
+    width: 148px !important;
+    min-width: 148px !important;
+    max-width: 148px !important;
+    scroll-snap-align: start !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .mobile-row-gallery .anime-card img {
+    width: 100% !important;
+    height: 170px !important;
+    object-fit: cover !important;
+    border-radius: 10px 10px 0 0 !important;
+  }
+
+  .mobile-row-gallery .anime-info {
+    padding: 7px 6px !important;
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .mobile-row-gallery .anime-info h3 {
+    font-size: 12px !important;
+    margin-bottom: 3px !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  .mobile-row-gallery .anime-info p {
+    font-size: 10px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .mobile-row-gallery .category-tags {
+    gap: 3px !important;
+    margin-top: auto !important;
+  }
+
+  .mobile-row-gallery .category-tag {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+  }
+}
+
+/* Small phone tweaks for mobile rows */
+@media (max-width: 480px) {
+  .mobile-row-gallery .anime-card {
+    flex: 0 0 132px !important;
+    width: 132px !important;
+    min-width: 132px !important;
+    max-width: 132px !important;
+  }
+
+  .mobile-row-gallery .anime-card img {
+    height: 150px !important;
+  }
+}

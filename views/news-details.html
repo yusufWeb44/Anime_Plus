@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>AnimePlus - News Details</title>
+    <script>
+        if (localStorage.getItem("isLoggedIn") === "true") {
+            document.documentElement.classList.add("logged-in");
+        } else {
+            document.documentElement.classList.add("logged-out");
+        }
+    </script>
+</head>
+
+<body class="news-details-page">
+
+    <div id="container">
+        <header id="navbar">
+            <div id="logo">
+                <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+            </div>
+
+            <div id="homler">
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="series.html">Series</a></li>
+                    <li><a href="movies.html">Movies</a></li>
+                    <li><a href="coming.html">Coming</a></li>
+                    <li><a href="airing.html">Airing</a></li>
+                </ul>
+            </div>
+
+            <div id="login-and-search">
+                <button>Login</button>
+            </div>
+
+            <div id="menu">
+                <i class="bi bi-list" id="menuIcon"></i>
+            </div>
+        </header>
+
+        <div id="menuContent">
+            <div id="profile">
+                <i class="bi bi-person-circle" id="userIcon"></i>
+                <label for="userIcon">UserName</label>
+            </div>
+
+            <div id="lists">
+                <div id="list1">
+                    <button><i class="fa-solid fa-list-ul"></i> My List</button>
+                    <button><i class="fa-solid fa-heart"></i> My Favorite List</button>
+                    <button><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</button>
+                    <button><i class="fa-solid fa-moon"></i> Anime Mood</button>
+                    <button><i class="fa-solid fa-newspaper"></i> News</button>
+                    <button onclick="window.location.href='contact.html'"><i
+                            class="fa-solid fa-address-card"></i> Contact Us</button>
+                </div>
+
+                <div id="list2">
+                    <p>Follow us on social media</p>
+                    <div class="social-popup">
+                        <a href="https://www.facebook.com/share/1AyK9zbSVH/" target="_blank"><span>Facebook</span></a>
+                        <a href="https://linkedin.com/in/yousef-ayoubi-2a29a93b6" target="_blank"><span>LinkedIn</span></a>
+                        <a href="https://www.instagram.com/u5.e.f?igsh=dGs3eHE4Z3poNm8z" target="_blank"><span>Instagram</span></a>
+                        <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><span>Telegram</span></a>
+                        <a href="https://youtube.com/@yousefayoubi8638?si=SMDpQuAAJgVodUGz" target="_blank"><span>Youtube</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="home-section" style="direction: ltr; margin-top: 80px; min-height: 80vh;">
+            <div class="article-header">
+                <a href="news.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to News</a>
+                <h1 id="articleTitle">Loading Article...</h1>
+            </div>
+
+            <!-- Loader -->
+            <div id="articleLoader" class="news-loader">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Fetching article content...</p>
+            </div>
+
+            <!-- Article Content -->
+            <div id="articleContent" class="article-content" style="display: none;">
+            </div>
+
+            <!-- Error state -->
+            <div id="articleErrorState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-circle-exclamation" style="color: #ef4444;"></i>
+                <h2>Failed to load article</h2>
+                <p>Could not extract the article content. The source website might have blocked access.</p>
+                <a id="originalSourceLink" href="#" target="_blank" class="explore-btn" style="border:none; cursor:pointer; text-decoration: none; display: inline-block; margin-top: 15px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Read on Original Website</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/news-details.js"></script>
+</body>
+
+</html>

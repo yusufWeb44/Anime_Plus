@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/profile.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <title>AnimePlus - Edit Profile</title>
+  <script>
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      document.documentElement.classList.add("logged-in");
+    } else {
+      document.documentElement.classList.add("logged-out");
+    }
+  </script>
+</head>
+<body class="edit-profile-page">
+
+  <div id="container">
+     <div class="edit-profile-wrapper">
+       <div class="edit-header">
+         <h1>Edit Profile</h1>
+         <button class="back-btn" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+       </div>
+       
+       <form id="editProfileForm" enctype="multipart/form-data">
+         
+         <div class="form-group cover-upload-group full-width">
+           <label>Cover Image</label>
+           <div class="cover-preview" id="coverPreviewBox" style="background-image: url('https://placehold.co/1200x300/1c0d2e/ac4a92?text=AnimePlus+Cover')">
+             <div class="upload-overlay">
+               <i class="fa-solid fa-camera"></i>
+               <span>Change Cover</span>
+             </div>
+           </div>
+           <input type="file" id="coverInput" name="coverImage" accept="image/*" hidden />
+         </div>
+
+         <div class="form-grid">
+           <div class="form-group avatar-upload-group">
+             <label style="text-align: center;">Profile Picture</label>
+             <div class="avatar-preview-container" id="avatarPreviewBox">
+                <img id="avatarPreview" src="https://ui-avatars.com/api/?name=User&background=ac4a92&color=fff" alt="Avatar">
+                <div class="upload-overlay circular">
+                  <i class="fa-solid fa-camera"></i>
+                </div>
+             </div>
+             <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden />
+           </div>
+
+           <div style="display: flex; flex-direction: column; justify-content: center; gap: 20px;">
+             <div class="form-group" style="margin-bottom: 0;">
+               <label><i class="fa-solid fa-location-dot"></i> Location</label>
+               <input type="text" id="locationInput" name="location" class="form-input" placeholder="e.g. Tokyo, Japan" />
+             </div>
+
+             <div class="form-group" style="margin-bottom: 0;">
+               <label><i class="fa-solid fa-cake-candles"></i> Birthday</label>
+               <input type="date" id="birthdayInput" name="birthDate" class="form-input" />
+             </div>
+           </div>
+         </div>
+
+         <div class="form-group full-width">
+           <label><i class="fa-solid fa-quote-left"></i> About Me</label>
+           <textarea id="bioInput" name="bio" rows="4" class="form-input" placeholder="Write something about your favorite anime..."></textarea>
+         </div>
+
+         <div class="form-actions full-width">
+           <button type="button" class="profile-btn secondary-btn" onclick="window.history.back()">Cancel</button>
+           <button type="submit" id="saveProfileBtn" class="profile-btn primary-btn">
+             <i class="fa-solid fa-check"></i> Save Changes
+           </button>
+         </div>
+       </form>
+     </div>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/edit-profile.js"></script>
+</body>
+</html>

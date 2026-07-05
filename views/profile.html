@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/profile.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <title>AnimePlus - My Profile</title>
+  <script>
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      document.documentElement.classList.add("logged-in");
+    } else {
+      document.documentElement.classList.add("logged-out");
+    }
+  </script>
+</head>
+<body class="profile-page">
+
+  <div id="container">
+    <header id="navbar">
+      <div id="logo">
+        <a href="home.html">
+          <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
+        </a>
+      </div>
+
+      <div id="homler">
+        <ul>
+          <li><a href="home.html">Home</a></li>
+          <li><a href="series.html">Series</a></li>
+          <li><a href="movies.html">Movies</a></li>
+          <li><a href="coming.html">Coming</a></li>
+                    <li><a href="airing.html">Airing</a></li>
+        </ul>
+      </div>
+
+      <div id="login-and-search">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" id="search" />
+        </div>
+        <button id="mainLoginBtn">Login</button>
+      </div>
+
+      <div id="menu">
+        <i class="bi bi-list" id="menuIcon"></i>
+      </div>
+    </header>
+
+    <div id="menuContent">
+      <div id="profile">
+        <i class="bi bi-person-circle" id="userIcon"></i>
+        <label for="userIcon">UserName</label>
+      </div>
+
+      <div id="lists">
+        <div id="list1">
+          <button onclick="window.location.href='mylist.html'"><i class="fa-solid fa-list-ul"></i> My List</button>
+          <button onclick="window.location.href='favorites.html'"><i class="fa-solid fa-heart"></i> My Favorite List</button>
+                    <button onclick="window.location.href='recommendations.html'"><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</button>
+                    <button onclick="window.location.href='mood.html'"><i class="fa-solid fa-moon"></i> Anime Mood</button>
+          <button><i class="fa-solid fa-newspaper"></i> News</button>
+          <button onclick="window.location.href='contact.html'"><i class="fa-solid fa-address-card"></i> Contact Us</button>
+        </div>
+
+        <div id="list2">
+          <p>Follow us on social media</p>
+          <div class="social-popup">
+            <a href="https://www.facebook.com/share/1AyK9zbSVH/" target="_blank"><span>Facebook</span></a>
+            <a href="https://linkedin.com/in/yousef-ayoubi-2a29a93b6" target="_blank"><span>LinkedIn</span></a>
+            <a href="https://www.instagram.com/u5.e.f?igsh=dGs3eHE4Z3poNm8z" target="_blank"><span>Instagram</span></a>
+            <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><span>Telegram</span></a>
+            <a href="https://youtube.com/@yousefayoubi8638?si=SMDpQuAAJgVodUGz" target="_blank"><span>Youtube</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN PROFILE VIEW -->
+    <main class="profile-container">
+       <button class="back-btn" onclick="window.location.href='home.html'" style="position: absolute; top: 20px; left: 20px; z-index: 20; background: rgba(0,0,0,0.5); border:none; color:white; backdrop-filter: blur(5px);">
+         <i class="fa-solid fa-arrow-left"></i> Home
+       </button>
+
+       <div class="profile-cover" id="profileCover" style="background-image: url('https://placehold.co/1200x300/1c0d2e/ac4a92?text=AnimePlus+Cover')">
+       </div>
+       
+       <div class="profile-header">
+         <div class="avatar-container">
+           <img id="profileAvatar" src="https://ui-avatars.com/api/?name=User&background=ac4a92&color=fff" alt="Avatar">
+         </div>
+         <div class="profile-actions">
+           <button id="editProfileBtn" class="profile-btn primary-btn"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+           <button id="logoutProfileBtn" class="profile-btn secondary-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+         </div>
+       </div>
+
+       <div class="profile-details">
+         <h1 id="profileUsername">Loading...</h1>
+         <div class="joined-badge"><i class="fa-regular fa-calendar-check"></i> Joined <span id="profileJoined">--</span></div>
+         
+         <div class="profile-info-grid">
+           <div class="info-card">
+             <i class="fa-solid fa-location-dot"></i>
+             <h3>Location</h3>
+             <p id="profileLocation">Not specified</p>
+           </div>
+           <div class="info-card">
+             <i class="fa-solid fa-cake-candles"></i>
+             <h3>Birthday</h3>
+             <p id="profileBirthday">Not specified</p>
+           </div>
+         </div>
+
+         <div class="profile-bio-card">
+           <i class="fa-solid fa-quote-left"></i>
+           <h3>About Me</h3>
+           <p id="profileBio">No bio added yet.</p>
+         </div>
+       </div>
+    </main>
+
+  </div>
+
+  <script src="../js/script.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/profile.js"></script>
+</body>
+</html>
