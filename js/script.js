@@ -669,25 +669,63 @@ function renderHomeSection(data, containerId, type) {
   const oldBtn = sectionWrap.querySelector(".show-more-btn");
   if (oldBtn) oldBtn.remove();
 
-  const isMobile = window.innerWidth <= 768;
-  const initialCount = isMobile ? data.length : 4;
-  const initialData = data.slice(0, initialCount);
-  createCard(initialData, containerId, type, true);
+  // Create all cards in DOM
+  createCard(data, containerId, type, true);
 
-  if (!isMobile && data.length > initialCount) {
+  const cards = Array.from(container.children);
+  cards.forEach((card, index) => {
+    if (index >= 4) {
+      card.style.display = "none";
+    }
+  });
+
+  if (data.length > 4) {
     const showMoreBtn = document.createElement("button");
     showMoreBtn.className = "show-more-btn";
     showMoreBtn.textContent = "Show More";
     showMoreBtn.onclick = () => {
-      const currentCount = container.children.length;
-      const nextData = data.slice(currentCount, currentCount + 4);
-      createCard(nextData, containerId, type, true);
-
-      if (container.children.length >= data.length) {
+      let visibleCount = cards.filter(c => c.style.display !== "none").length;
+      let nextLimit = visibleCount + 4;
+      cards.forEach((card, index) => {
+        if (index < nextLimit) {
+          card.style.display = "";
+        }
+      });
+      if (nextLimit >= data.length) {
         showMoreBtn.remove();
       }
     };
     sectionWrap.appendChild(showMoreBtn);
+  }
+}
+
+// =====================
+// Mobile Back Button
+// =====================
+function initMobileBackButton() {
+  // Only inject on small screens
+  if (window.innerWidth > 768) return;
+  // Don't inject on home page or if a back button already exists
+  if (document.body.classList.contains("home")) return;
+  if (document.querySelector(".back-btn, .mobile-back-btn")) return;
+
+  const btn = document.createElement("button");
+  btn.className = "mobile-back-btn";
+  btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Back';
+  btn.onclick = () => {
+    if (document.referrer && document.referrer !== window.location.href) {
+      history.back();
+    } else {
+      // Fallback: go to home
+      const inViews = window.location.pathname.includes("/views/");
+      window.location.href = inViews ? "home.html" : "/views/home.html";
+    }
+  };
+
+  // Insert button at top of main content
+  const main = document.querySelector("main") || document.querySelector(".home-section");
+  if (main) {
+    main.insertBefore(btn, main.firstChild);
   }
 }
 
@@ -699,6 +737,7 @@ async function boot() {
   initSearch();
   initGalleries();
   initMenuAndModal();
+  initMobileBackButton();
 
   // Fetch and render top-rated content if on Home page
   if (isHomePage()) {

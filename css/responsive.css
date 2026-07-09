@@ -7,6 +7,22 @@
    - No existing CSS files are modified
    ============================================= */
 
+/* =============================================
+   GLOBAL: Hide search on pages that don't need it
+   (applies on ALL screen sizes)
+   ============================================= */
+.profile-page #login-and-search .search-box,
+.details-page #login-and-search .search-box,
+.news-details-page #login-and-search .search-box,
+.mood-page #login-and-search .search-box,
+.contact-page #login-and-search .search-box,
+.recommendations-page #login-and-search .search-box,
+.favorites-page #login-and-search .search-box,
+.mylist-page #login-and-search .search-box {
+  display: none !important;
+}
+
+
 /* =========================================
    DESKTOP SAFETY: Force-hide mobile elements
    on screens wider than 1024px
@@ -230,6 +246,9 @@
     flex-wrap: wrap !important;
     padding: 10px 15px !important;
     gap: 0 !important;
+    background: rgba(32, 8, 32, 0.98) !important;
+    backdrop-filter: none !important;
+    z-index: 1000 !important;
   }
 
   #logo {
@@ -488,16 +507,34 @@
     justify-content: center !important;
   }
 
-  /* === Dots: move from absolute to below the button === */
+  /* === Dots: show below content in center === */
+  .spotlight-container {
+    padding-bottom: 50px !important;
+    /* Reserve space for absolute-positioned dots */
+  }
+
   .spotlight-dots {
-    position: static !important;
-    transform: none !important;
+    position: absolute !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
     display: flex !important;
     justify-content: center !important;
+    align-items: center !important;
     gap: 10px !important;
-    margin-top: 14px !important;
-    padding-bottom: 18px !important;
     z-index: 10 !important;
+    width: auto !important;
+  }
+
+  /* === Gap between hero and first section === */
+  #spotlight-section {
+    margin-bottom: 24px !important;
+  }
+
+  /* === Fix header not changing color when sidebar opens === */
+  #navbar {
+    background-color: inherit !important;
+    transition: none !important;
   }
 
   /* === Remove Show More Button === */
@@ -567,12 +604,56 @@
     font-size: 18px !important;
     font-weight: 700 !important;
     text-align: left !important;
+    margin-left: 0 !important;
   }
 
   /* main content area for gallery pages */
-  main.home-section {
-    padding: 0 0 30px !important;
+  .home-section {
+    padding: 15px 12px 30px !important;
   }
+
+  /* === News/Mood/Rec pages: fix large top gap === */
+  .news-page .home-section,
+  .mood-page .home-section {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .news-page .home-section .user-list-header,
+  .mood-page .home-section .user-list-header,
+  .user-list-header {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* === Unified label/tag colors inside sections (Recommendations, Mood) === */
+  .category-tag {
+    background: #ac4a92 !important;
+    color: white !important;
+  }
+
+  /* === Back button visible on mobile === */
+  .back-to-gallery-wrapper {
+    padding: 90px 15px 0 !important;
+  }
+
+  .back-btn {
+    background: transparent !important;
+    color: #ac4a92 !important;
+    border: 1.5px solid #ac4a92 !important;
+    padding: 8px 18px !important;
+    border-radius: 30px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
+
 
   /* === Mobile Row Sections === */
   .mobile-row-section {
@@ -581,25 +662,11 @@
   }
 
   .mobile-row-title {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    padding: 0 12px !important;
-    margin: 0 0 8px !important;
-    text-align: left !important;
-    letter-spacing: 0.3px;
-    position: relative;
-  }
-
-  .mobile-row-title::before {
-    content: "";
-    display: inline-block;
-    width: 3px;
-    height: 14px;
-    background: #ac4a92;
-    border-radius: 2px;
-    margin-right: 8px;
-    vertical-align: middle;
+    font-family: 'Bebas Neue', cursive !important;
+    font-size: 20px !important;
+    color: #ac4a92 !important;
+    margin-bottom: 10px !important;
+    text-transform: uppercase !important;
   }
 
   /* === Mobile Row Gallery (horizontal scroll) === */

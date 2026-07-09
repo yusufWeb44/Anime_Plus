@@ -81,7 +81,8 @@ const fetchAniList = async (query, variables = {}, retryCount = 0) => {
       {
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
+          "Accept": "application/json",
+          "User-Agent": "AnimePlus/1.0",
         },
         timeout: 20000,
       }

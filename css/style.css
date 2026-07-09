@@ -866,8 +866,6 @@ label[for="userIcon"] {
   font-size: 45px;
   color: #ac4a92;
   margin-bottom: 30px;
-  border-left: 6px solid #ac4a92;
-  padding-left: 20px;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -1765,7 +1763,7 @@ body:not(.details-page) #container {
   font-size: 3rem;
   letter-spacing: 2px;
   margin-bottom: 30px;
-  color: white;
+  color: #ac4a92;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -2121,22 +2119,25 @@ body:not(.details-page) #container {
 }
 
 .mood-back-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 20px;
+  background: transparent;
+  color: #ac4a92;
+  border: 1px solid #ac4a92;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 1rem;
-  margin-bottom: 20px;
-  transition: 0.3s;
-  display: flex;
+  transition: all 0.3s;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 20px;
 }
 
 .mood-back-btn:hover {
   background: #ac4a92;
+  color: white;
+  transform: translateX(-5px);
 }
 
 .mood-results-title {
