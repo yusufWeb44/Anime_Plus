@@ -11,6 +11,9 @@ router.post("/import/trending", adminController.importTrending);
 router.post("/import/upcoming", adminController.importUpcoming);
 router.post("/import/airing", adminController.importAiring);
 router.post("/import/movies", adminController.importMovies);
+router.post("/import/classics", adminController.importClassics);
+router.post("/import/classics/reset", adminController.resetClassicsProgress);
+router.post("/import/related", adminController.importRelated);
 
 // Maintenance Routes
 router.post("/maintenance/refresh-active", adminController.refreshActive);

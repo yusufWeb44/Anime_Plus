@@ -20,6 +20,8 @@ const UserList = require("./UserList")(sequelize, DataTypes);
 const UserListItem = require("./UserListItem")(sequelize, DataTypes);
 const RefreshToken = require("./RefreshToken")(sequelize, DataTypes);
 const ContactMessage = require("./ContactMessage")(sequelize, DataTypes);
+const AnimeRelation = require("./AnimeRelation")(sequelize, DataTypes);
+const ClassicImportProgress = require("./ClassicImportProgress")(sequelize, DataTypes);
 
 // User -> UserAction
 User.hasMany(UserAction, {
@@ -65,6 +67,28 @@ Anime.hasMany(UserAction, {
   foreignKey: "animeId",
 });
 
+// Anime -> AnimeRelation (source)
+Anime.hasMany(AnimeRelation, {
+  foreignKey: "sourceAnimeId",
+  as: "relationsAsSource",
+  onDelete: "CASCADE",
+});
+AnimeRelation.belongsTo(Anime, {
+  foreignKey: "sourceAnimeId",
+  as: "sourceAnime",
+});
+
+// Anime -> AnimeRelation (target)
+Anime.hasMany(AnimeRelation, {
+  foreignKey: "targetAnimeId",
+  as: "relationsAsTarget",
+  onDelete: "CASCADE",
+});
+AnimeRelation.belongsTo(Anime, {
+  foreignKey: "targetAnimeId",
+  as: "targetAnime",
+});
+
 module.exports = {
   sequelize,
   Anime,
@@ -74,5 +98,7 @@ module.exports = {
   UserListItem,
   RefreshToken,
   ContactMessage,
+  AnimeRelation,
+  ClassicImportProgress,
   Op
 };

@@ -366,6 +366,40 @@
             "description": "Fetches top rated items categorized into series, movies, and upcoming lists."
           },
           "response": []
+        },
+        {
+          "name": "Get Related Anime (عرض الأنميات المرتبطة)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/anime/:type/:id/related",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "anime",
+                ":type",
+                ":id",
+                "related"
+              ],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "series",
+                  "description": "Can be: series, movies, or coming"
+                },
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "The numeric ID of the anime"
+                }
+              ]
+            },
+            "description": "Fetches related anime for a specific anime by type and ID."
+          },
+          "response": []
         }
       ]
     },
@@ -1230,6 +1264,131 @@
               ]
             },
             "description": "Manually updates the status of an anime. Allowed values: 'upcoming', 'airing', 'released'."
+          },
+          "response": []
+        },
+        {
+          "name": "Import Classic Anime (استيراد أنميات كلاسيكية)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/classics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "classics"
+              ]
+            },
+            "description": "Paginated classic anime import. Each run fetches 3 pages per active year range (50 results/page) and saves progress so subsequent runs continue where the previous one left off. Returns rangesProcessed, pagesFetched, created, updated, unchanged, blocked, errors, and completed. Call again to continue importing. When completed is true, all ranges are exhausted."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Classic Import Progress (إعادة تعيين تقدم الاستيراد الكلاسيكي)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/classics/reset",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "classics",
+                "reset"
+              ]
+            },
+            "description": "Clears all classic import pagination progress from the database. After calling this, the next Import Classic Anime run will start over from page 1 of every year range. Use when you want a full rescan of the classic library."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Import Related Anime (استيراد الأنميات المرتبطة)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/import/related",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "import",
+                "related"
+              ]
+            },
+            "description": "Each run processes the next internal batch and imports missing related anime and relationships."
           },
           "response": []
         }

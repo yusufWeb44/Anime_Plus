@@ -157,3 +157,45 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
+/**
+ * Trigger Classic Anime Import (paginated, progress-persisted)
+ */
+exports.importClassics = async (req, res) => {
+  try {
+    const results = await ingestionService.importClassics();
+    res.json({
+      message: results.completed
+        ? "All classic ranges fully imported. Use reset to restart."
+        : "Classics import run completed — call again to continue.",
+      results,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Reset Classic Import Progress (clears all pagination checkpoints)
+ */
+exports.resetClassicsProgress = async (req, res) => {
+  try {
+    const { ClassicImportProgress } = require("../models");
+    const deleted = await ClassicImportProgress.destroy({ where: {} });
+    res.json({ message: `Progress reset. ${deleted} range(s) cleared. Next import will start from page 1.` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+/**
+ * Trigger Related Anime Import
+ */
+exports.importRelated = async (req, res) => {
+  try {
+    const results = await ingestionService.importRelated();
+    res.json({ message: "Related anime import completed", results });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

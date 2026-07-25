@@ -237,94 +237,160 @@ exports.getAnimeByMood = async (req, res) => {
   }
 };
 
+// Helper to find all IDs belonging to the same franchise safely.
+// Uses STRICT unidirectional BFS to prevent crossover bridges
+// (e.g., festival specials that link two unrelated franchises).
+const getFranchiseIds = async (Anime, AnimeRelation, Op, currentAnime) => {
+  const visitedIds = new Set([currentAnime.id]);
+  const queue = [currentAnime.id];
+  const relationTypesMap = {};
+
+  // DIRECTIONAL: these expand "outward" from the current anime (source → target)
+  const FORWARD_ONLY = ['SEQUEL', 'PREQUEL', 'PARENT', 'SIDE_STORY', 'SPIN_OFF', 'ALTERNATIVE', 'COMPILATION', 'CONTAINS', 'SUMMARY'];
+  // BIDIRECTIONAL: safe to traverse both ways
+  const BIDIRECTIONAL = ['ADAPTATION', 'FRANCHISE'];
+
+  while (queue.length > 0) {
+    const currentBatch = [...queue];
+    queue.length = 0;
+
+    // 1. Forward edges (source = current batch → target)
+    const forwardEdges = await AnimeRelation.findAll({
+      where: {
+        sourceAnimeId: { [Op.in]: currentBatch },
+        relationType: { [Op.in]: FORWARD_ONLY }
+      }
+    });
+    for (const edge of forwardEdges) {
+      if (!visitedIds.has(edge.targetAnimeId)) {
+        visitedIds.add(edge.targetAnimeId);
+        queue.push(edge.targetAnimeId);
+        if (!relationTypesMap[edge.targetAnimeId]) relationTypesMap[edge.targetAnimeId] = edge.relationType;
+      }
+    }
+
+    // 2. Reverse edges (target = current batch ← source) for FORWARD types
+    //    This allows finding "parent" when we started from a child
+    const reverseEdges = await AnimeRelation.findAll({
+      where: {
+        targetAnimeId: { [Op.in]: currentBatch },
+        relationType: { [Op.in]: FORWARD_ONLY }
+      }
+    });
+    for (const edge of reverseEdges) {
+      if (!visitedIds.has(edge.sourceAnimeId)) {
+        // GUARD: Only accept if the source name is actually related to the root anime
+        visitedIds.add(edge.sourceAnimeId);
+        queue.push(edge.sourceAnimeId);
+        if (!relationTypesMap[edge.sourceAnimeId]) relationTypesMap[edge.sourceAnimeId] = edge.relationType;
+      }
+    }
+
+    // 3. Bidirectional (ADAPTATION, FRANCHISE) - follow both directions
+    const biEdges = await AnimeRelation.findAll({
+      where: {
+        [Op.or]: [
+          { sourceAnimeId: { [Op.in]: currentBatch } },
+          { targetAnimeId: { [Op.in]: currentBatch } }
+        ],
+        relationType: { [Op.in]: BIDIRECTIONAL }
+      }
+    });
+    for (const edge of biEdges) {
+      if (!visitedIds.has(edge.targetAnimeId)) {
+        visitedIds.add(edge.targetAnimeId);
+        queue.push(edge.targetAnimeId);
+        if (!relationTypesMap[edge.targetAnimeId]) relationTypesMap[edge.targetAnimeId] = edge.relationType;
+      }
+      if (!visitedIds.has(edge.sourceAnimeId)) {
+        visitedIds.add(edge.sourceAnimeId);
+        queue.push(edge.sourceAnimeId);
+        if (!relationTypesMap[edge.sourceAnimeId]) relationTypesMap[edge.sourceAnimeId] = edge.relationType;
+      }
+    }
+  }
+
+  // Post-filter: remove any IDs whose anime name has NO word overlap with the current anime's name
+  // This is the final guard against crossover bridges
+  const rootWords = new Set(
+    currentAnime.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
+  );
+  
+  const allVisited = Array.from(visitedIds);
+  allVisited.shift(); // remove the current anime itself (already added)
+  
+  const safeIds = [];
+  if (allVisited.length > 0) {
+    const candidates = await Anime.findAll({
+      where: { id: { [Op.in]: allVisited } },
+      attributes: ['id', 'name']
+    });
+    
+    for (const c of candidates) {
+      const cWords = new Set(
+        c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
+      );
+      // Check if there is at least 1 significant word in common
+      const intersection = [...rootWords].filter(w => cWords.has(w));
+      if (intersection.length > 0) {
+        safeIds.push(c.id);
+      } else {
+        delete relationTypesMap[c.id];
+      }
+    }
+  }
+
+  // Always include current anime id in the franchise set
+  const finalIds = [currentAnime.id, ...safeIds];
+  return { franchiseIds: finalIds, relationTypesMap };
+};
+
+
 exports.getRelatedAnime = async (req, res) => {
   const { id } = req.params;
   try {
+    const { Anime, AnimeRelation, Op } = require("../models");
+    
     const currentAnime = await Anime.findByPk(id);
     if (!currentAnime) {
       return res.status(404).json({ error: "Anime not found" });
     }
 
-    const allAnimes = await Anime.findAll({
-      where: { id: { [Op.ne]: id } }
-    });
+    const { franchiseIds, relationTypesMap } = await getFranchiseIds(Anime, AnimeRelation, Op, currentAnime);
+    
+    // Remove the current anime itself from the related display
+    const relatedIds = franchiseIds.filter(fId => fId !== currentAnime.id);
 
-    const nameA = currentAnime.name.toLowerCase().trim();
-    const genresA = currentAnime.genres ? currentAnime.genres.toLowerCase() : "";
-
-    function getBigrams(str) {
-      let bigrams = new Set();
-      for (let i = 0; i < str.length - 1; i++) {
-        bigrams.add(str.slice(i, i + 2));
-      }
-      return bigrams;
+    if (relatedIds.length === 0) {
+      return res.json([]);
     }
-    const bgA = getBigrams(nameA);
 
-    const scoredAnimes = allAnimes.map(anime => {
-      const nameB = anime.name.toLowerCase().trim();
-      const genresB = anime.genres ? anime.genres.toLowerCase() : "";
-      
-      let score = 0;
-
-      let prefixMatch = false;
-      const longer = nameA.length > nameB.length ? nameA : nameB;
-      const shorter = nameA.length > nameB.length ? nameB : nameA;
-      
-      if (shorter.length >= 3 && longer.startsWith(shorter)) {
-        const nextChar = longer[shorter.length];
-        if (!nextChar || nextChar === ' ' || nextChar === ':' || nextChar === '-') {
-          prefixMatch = true;
-        }
-      }
-
-      const bgB = getBigrams(nameB);
-      let intersection = 0;
-      for (let bg of bgA) {
-        if (bgB.has(bg)) intersection++;
-      }
-      const dice = (bgA.size + bgB.size) === 0 ? 0 : (2 * intersection) / (bgA.size + bgB.size);
-      
-      score += dice * 50; 
-      
-      if (prefixMatch) {
-        score += 30; 
-      }
-
-      if (genresA && genresB) {
-        const gA = genresA.split(',').map(g => g.trim()).filter(Boolean);
-        const gB = genresB.split(',').map(g => g.trim()).filter(Boolean);
-        let shared = 0;
-        gA.forEach(g => {
-          if (gB.includes(g)) shared++;
-        });
-        if (shared > 0) {
-          score += (shared / Math.max(gA.length, gB.length)) * 20; 
-        } else {
-          score -= 40;
-        }
-      }
-
-      if (nameA === nameB) score = 0;
-
-      return { anime, score };
+    const relatedAnimesRaw = await Anime.findAll({
+      where: { id: { [Op.in]: relatedIds } }
     });
 
-    const validRelated = scoredAnimes.filter(x => x.score >= 40);
-    validRelated.sort((a, b) => b.score - a.score);
-
-    const related = validRelated.slice(0, 12).map(x => x.anime);
-
-    const result = related.map(x => {
-      const item = x.toJSON();
+    const relatedAnimes = relatedAnimesRaw.map(item => {
+      const itemJSON = item.toJSON();
       let type = "series";
-      if (item.status === "upcoming") type = "coming";
-      else if (item.status === "airing") type = "airing";
-      else if (item.type === "movie") type = "movies";
-      return { ...item, type };
+      if (itemJSON.status === "upcoming") type = "coming";
+      else if (itemJSON.status === "airing") type = "airing";
+      else if (itemJSON.type === "movie") type = "movies";
+
+      return {
+        ...itemJSON,
+        type: type,
+        relationType: relationTypesMap[item.id] || "OTHER"
+      };
     });
 
-    res.json(result);
+    // Sort chronologically 
+    relatedAnimes.sort((a, b) => {
+      const dateA = a.releaseDate ? new Date(a.releaseDate) : new Date("1970-01-01");
+      const dateB = b.releaseDate ? new Date(b.releaseDate) : new Date("1970-01-01");
+      return dateA - dateB;
+    });
+
+    res.json(relatedAnimes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -333,10 +399,15 @@ exports.getRelatedAnime = async (req, res) => {
 exports.getAnimeRecommendations = async (req, res) => {
   const { id } = req.params;
   try {
+    const { Anime, AnimeRelation, Op } = require("../models");
+
     const currentAnime = await Anime.findByPk(id);
     if (!currentAnime) {
       return res.status(404).json({ error: "Anime not found" });
     }
+
+    // 1. Get all IDs that belong to the SAME franchise to exclude them
+    const { franchiseIds } = await getFranchiseIds(Anime, AnimeRelation, Op, currentAnime);
 
     const ignoredGenres = ["shounen", "shoujo", "seinen", "josei", "award winning"];
     let currentGenres = [];
@@ -344,10 +415,7 @@ exports.getAnimeRecommendations = async (req, res) => {
 
     if (currentAnime.genres) {
       currentGenres = currentAnime.genres.split(",").map(g => g.trim()).filter(Boolean);
-      
       const meaningfulGenres = currentGenres.filter(g => !ignoredGenres.includes(g.toLowerCase()));
-      
-      // If we filtered out everything (unlikely), fallback to original
       const genresToUse = meaningfulGenres.length > 0 ? meaningfulGenres : currentGenres;
 
       conditions = genresToUse.map(g => ({
@@ -359,59 +427,24 @@ exports.getAnimeRecommendations = async (req, res) => {
        conditions = [{ type: currentAnime.type }];
     }
 
-    // Fetch up to 100 candidates that share at least one meaningful genre
+    // 2. Fetch candidates excluding ANY part of the same franchise
     const candidates = await Anime.findAll({
       where: {
         [Op.or]: conditions,
-        id: { [Op.ne]: id }
+        id: { [Op.notIn]: franchiseIds }
       },
       limit: 100
     });
 
-    const nameA = currentAnime.name.toLowerCase().trim();
-    function getBigrams(str) {
-      let bigrams = new Set();
-      for (let i = 0; i < str.length - 1; i++) {
-        bigrams.add(str.slice(i, i + 2));
-      }
-      return bigrams;
-    }
-    const bgA = getBigrams(nameA);
-
-    const isRelated = (nameB) => {
-      nameB = nameB.toLowerCase().trim();
-      if (nameA === nameB) return true;
-      const longer = nameA.length > nameB.length ? nameA : nameB;
-      const shorter = nameA.length > nameB.length ? nameB : nameA;
-      if (shorter.length >= 3 && longer.startsWith(shorter)) {
-        const nextChar = longer[shorter.length];
-        if (!nextChar || nextChar === ' ' || nextChar === ':' || nextChar === '-') {
-          return true;
-        }
-      }
-      const bgB = getBigrams(nameB);
-      let intersection = 0;
-      for (let bg of bgA) {
-        if (bgB.has(bg)) intersection++;
-      }
-      const dice = (bgA.size + bgB.size) === 0 ? 0 : (2 * intersection) / (bgA.size + bgB.size);
-      if (dice > 0.5) return true;
-      return false;
-    };
-
-    const filteredCandidates = candidates.filter(anime => !isRelated(anime.name));
-
     // Score candidates by how many genres overlap exactly
-    const scoredCandidates = filteredCandidates.map(anime => {
+    const scoredCandidates = candidates.map(anime => {
       let score = 0;
       if (anime.genres) {
         const candidateGenres = anime.genres.split(",").map(g => g.trim().toLowerCase());
         const sourceGenres = currentGenres.map(g => g.toLowerCase());
         
-        // Count overlaps
         candidateGenres.forEach(g => {
           if (sourceGenres.includes(g)) {
-            // Give less weight to demographics, more to actual genres
             score += ignoredGenres.includes(g) ? 1 : 3;
           }
         });
@@ -419,7 +452,7 @@ exports.getAnimeRecommendations = async (req, res) => {
       return { anime, score };
     });
 
-    // Sort by score descending, then shuffle the top ones slightly
+    // Sort by score descending
     scoredCandidates.sort((a, b) => b.score - a.score);
     
     // Take top 20, shuffle them to add variety, then take 12

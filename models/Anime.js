@@ -111,6 +111,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+
+      relationsCheckedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: "Timestamp of last relations scan for batch tracking",
+      },
     },
     {
       timestamps: true,

@@ -296,3 +296,143 @@ exports.getDetails = async (anilistId) => {
   const data = await fetchAniList(query, { id: anilistId });
   return mapMediaToAnime(data.Media);
 };
+
+/**
+ * Fetch one page of classic anime for a specific year range.
+ * Returns { media: [...], hasNextPage: bool, currentPage: int }
+ *
+ * @param {number} startYear  - Start year (inclusive)
+ * @param {number} endYear    - End year (inclusive)
+ * @param {number} page       - AniList page number (1-based)
+ * @param {number} perPage    - Results per page (max 50 for AniList)
+ */
+exports.getClassicsPage = async (startYear, endYear, page = 1, perPage = 50) => {
+  const VALID_FORMATS = ["TV", "TV_SHORT", "MOVIE", "OVA", "ONA", "SPECIAL"];
+  const rangeLabel = `${startYear}-${endYear}`;
+
+  const query = `
+    query ($page: Int, $perPage: Int, $startYear: FuzzyDateInt, $endYear: FuzzyDateInt) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo {
+          currentPage
+          hasNextPage
+          total
+          perPage
+        }
+        media(
+          type: ANIME,
+          isAdult: false,
+          startDate_greater: $startYear,
+          startDate_lesser: $endYear,
+          sort: [SCORE_DESC, POPULARITY_DESC]
+        ) {
+          ${ANIME_FRAGMENT}
+        }
+      }
+    }
+  `;
+
+  console.log(`[AniList][Classics] Fetching range ${rangeLabel}, page ${page}`);
+
+  const variables = {
+    page,
+    perPage,
+    startYear: startYear * 10000,       // FuzzyDateInt: YYYY0000
+    endYear:   endYear   * 10000 + 1231, // FuzzyDateInt: YYYY1231
+  };
+
+  const data = await fetchAniList(query, variables);
+  const pageData = data.Page;
+  const pageInfo = pageData.pageInfo;
+
+  const media = (pageData.media || [])
+    .filter(m => {
+      if (!VALID_FORMATS.includes(m.format)) return false;
+      const { blocked, reason } = checkBlocked(m);
+      if (blocked) {
+        const title = m.title?.english || m.title?.romaji || "Unknown";
+        console.log(`[AniList][Classics] Skipped "${title}" — blocked: ${reason}`);
+        return false;
+      }
+      return true;
+    })
+    .map(mapMediaToAnime);
+
+  return {
+    media,
+    hasNextPage: pageInfo.hasNextPage,
+    currentPage: pageInfo.currentPage,
+    total: pageInfo.total,
+  };
+};
+
+
+
+/**
+ * Fetch relations for a single anime by AniList ID.
+ * Returns an array of { relationType, media } objects (depth 1 only).
+ */
+exports.getRelations = async (anilistId) => {
+  const VALID_RELATION_TYPES = [
+    "SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY",
+    "SPIN_OFF", "ALTERNATIVE", "OTHER",
+  ];
+
+  const VALID_FORMATS = ["TV", "TV_SHORT", "MOVIE", "OVA", "ONA", "SPECIAL"];
+
+  const query = `
+    query ($id: Int) {
+      Media(id: $id, type: ANIME) {
+        id
+        relations {
+          edges {
+            relationType
+            node {
+              ${ANIME_FRAGMENT}
+              type
+              isAdult
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await fetchAniList(query, { id: anilistId });
+
+  if (!data || !data.Media || !data.Media.relations) {
+    return [];
+  }
+
+  const results = [];
+  for (const edge of data.Media.relations.edges) {
+    const node = edge.node;
+
+    // Skip non-anime media (manga, light novels, etc.)
+    if (node.type !== "ANIME") continue;
+
+    // Skip adult content
+    if (node.isAdult) continue;
+
+    // Skip invalid relation types
+    if (!VALID_RELATION_TYPES.includes(edge.relationType)) continue;
+
+    // Skip invalid formats
+    if (node.format && !VALID_FORMATS.includes(node.format)) continue;
+
+    // Apply existing content filter
+    const { blocked, reason } = checkBlocked(node);
+    if (blocked) {
+      const title = node.title?.english || node.title?.romaji || "Unknown";
+      console.log(`[AniList][Relations] Skipped "${title}" — blocked content: ${reason}`);
+      continue;
+    }
+
+    results.push({
+      relationType: edge.relationType,
+      media: mapMediaToAnime(node),
+    });
+  }
+
+  return results;
+};
