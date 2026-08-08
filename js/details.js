@@ -120,7 +120,25 @@ async function fetchAnimeDetails(type, id) {
     // Populate Page
     const name = anime.name || anime.title || "Unknown Title";
     const rating = anime.rating || "0.0";
-    const image = anime.src || anime.image || "../assets/placeholder-poster.jpg";
+
+    // Build the best image URL for the details hero poster.
+    // Try /large/ first (sharpest), fall back to the original src if /large/ 404s,
+    // and only show placeholder as a last resort.
+    const originalImageUrl = anime.srcLarge || anime.src || anime.image || null;
+    let image = originalImageUrl || "../assets/placeholder-poster.jpg";
+    let imageFallback = null; // The URL to try if `image` 404s
+
+    if (originalImageUrl && originalImageUrl.includes("anilistcdn") && originalImageUrl.includes("/cover/")) {
+      const largeUrl = originalImageUrl.replace(/\/cover\/(small|medium)\//, '/cover/large/');
+      if (largeUrl !== originalImageUrl) {
+        // Original was /small/ or /medium/ — upgrade to /large/, keep original as fallback
+        image = largeUrl;
+        imageFallback = originalImageUrl;
+      } else if (originalImageUrl.includes('/cover/large/')) {
+        // Already /large/, no upgrade needed, keep as-is
+        image = originalImageUrl;
+      }
+    }
 
     let synopsis = anime.description || "No description available for this anime.";
     synopsis = synopsis.replace(/\(Source:.*?\)/gi, "").replace(/\[Written by.*?\]/gi, "").trim();
@@ -144,7 +162,29 @@ async function fetchAnimeDetails(type, id) {
 
     const posterEl = document.getElementById("detailPoster");
     const backEl = document.getElementById("detailsBackdrop");
-    if (posterEl) posterEl.src = image;
+    if (posterEl) {
+      // Apply eager loading + fade-in to the hero poster (always above fold)
+      posterEl.classList.add("poster-image");
+      posterEl.loading = "eager";
+      posterEl.decoding = "async";
+      posterEl.fetchPriority = "high";
+
+      // The global capture-phase error handler in script.js reads `data-fallback`.
+      // Set it so that if /large/ 404s, it retries with the original /medium/ URL
+      // before falling back to the placeholder.
+      if (imageFallback) {
+        posterEl.dataset.fallback = imageFallback;
+      }
+
+      posterEl.onload = function () {
+        this.classList.add("loaded");
+        // Also update backdrop to the actual loaded URL
+        if (backEl) backEl.style.backgroundImage = `url(${this.src})`;
+      };
+      posterEl.src = image;
+      // Handle already-cached image
+      if (posterEl.complete && posterEl.naturalHeight !== 0) posterEl.classList.add("loaded");
+    }
     if (backEl) backEl.style.backgroundImage = `url(${image})`;
 
     // Store trailer URL for later use
@@ -520,10 +560,12 @@ function renderLocalCards(newDataList, containerId, btnId, stateKey, isAppend) {
   const btn = document.getElementById(btnId);
   if (!container || !btn) return;
 
-  const html = newDataList.map(anime => {
+  // Cards already in container before this batch (for priority calculation)
+  const existingCount = container.children.length;
+
+  newDataList.forEach((anime, i) => {
     const type = anime.type || "series";
-    const img = anime.src || anime.image || "../assets/placeholder-poster.jpg";
-    const title = anime.name || anime.title || "Unknown";
+    const title = (anime.name || anime.title || "Unknown").replace(/"/g, "&quot;");
     const rating = anime.rating || "N/A";
     const displayTags = anime.genres || anime.category || "";
     const categories = displayTags ? displayTags.split(",").map((c) => c.trim()) : [];
@@ -531,29 +573,34 @@ function renderLocalCards(newDataList, containerId, btnId, stateKey, isAppend) {
     let tagsHtml = '<div class="category-tags">';
     categories.forEach((cat) => {
       if (categories.length > 1 && (cat.toLowerCase() === "series" || cat.toLowerCase() === "movies")) return;
-      tagsHtml += `<span class="category-tag">${cat}</span>`;
+      tagsHtml += `<span class="category-tag">${cat.replace(/</g, "&lt;")}</span>`;
     });
     tagsHtml += "</div>";
 
-    const detailsUrl = `details.html?id=${anime.id}&type=${type}`;
+    const detailsUrl = `details.html?id=${encodeURIComponent(anime.id)}&type=${encodeURIComponent(type)}`;
+    // Only first 4 cards of the very first batch are likely visible above the fold
+    const isEager = !isAppend && (existingCount + i) < 4;
+    const posterHtml = typeof getPosterHTML === "function"
+      ? getPosterHTML(anime, isEager)
+      : `<img src="${anime.src || anime.image || '../assets/placeholder-poster.jpg'}" alt="${title}">`;
 
-    return `
-      <div class="anime-card" onclick="window.location.href='${detailsUrl}'" style="cursor: pointer;">
-          <img src="${img}" alt="${title}">
-          <div class="anime-info">
-              <h3>${title}</h3>
-              <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
-              ${tagsHtml}
-          </div>
+    const card = document.createElement("div");
+    card.className = "anime-card";
+    card.style.cursor = "pointer";
+    card.innerHTML = `
+      ${posterHtml}
+      <div class="anime-info">
+          <h3>${title}</h3>
+          <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
+          ${tagsHtml}
       </div>
     `;
-  }).join("");
+    card.addEventListener("click", () => { window.location.href = detailsUrl; });
+    container.appendChild(card);
+  });
 
-  if (isAppend) {
-    container.insertAdjacentHTML('beforeend', html);
-  } else {
-    container.innerHTML = html;
-  }
+  // Handle images already in browser cache
+  if (typeof checkCachedImages === "function") checkCachedImages();
 
   if (galleryStates[stateKey].currentCount >= galleryStates[stateKey].data.length) {
     btn.style.display = "none";

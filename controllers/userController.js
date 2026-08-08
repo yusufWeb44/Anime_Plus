@@ -301,7 +301,9 @@ exports.getRecommendations = async (req, res) => {
       })
       .filter(a => a._score > 0)
       .sort((a, b) => b._score - a._score)
-      .slice(0, 40);
+      .slice(0, 100) // take top 100 matches
+      .sort(() => 0.5 - Math.random()) // shuffle for variety
+      .slice(0, 40); // return 40
 
     // Remove internal score from response
     const recommendations = scored.map(({ _score, ...rest }) => rest);

@@ -1,6 +1,69 @@
 // js/script.js
 
 // =====================
+// Image Loading Helper
+// =====================
+function getPosterHTML(anime, isEager) {
+  const originalUrl = anime.src || anime.image || null;
+  const title = (anime.name || anime.title || "Unknown").replace(/"/g, "&quot;");
+  const loadMode = isEager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"';
+
+  let imgUrl = originalUrl || "../assets/placeholder-poster.jpg";
+
+  // Try to upgrade AniList /medium/ or /small/ URLs to /large/ for sharper card images.
+  // If /large/ doesn't exist for this anime (older titles), the onerror will fall back to
+  // the original URL (e.g. /medium/) which is still a real image.
+  let fallbackUrl = null;
+  if (originalUrl && originalUrl.includes("anilistcdn") && originalUrl.includes("/cover/")) {
+    const largeUrl = originalUrl.replace(/\/cover\/(small|medium)\//, '/cover/large/');
+    if (largeUrl !== originalUrl) {
+      // We actually changed the URL (it was /small/ or /medium/), so set fallback
+      imgUrl = largeUrl;
+      fallbackUrl = originalUrl; // Fall back to the original if /large/ 404s
+    }
+    // If it was already /large/, imgUrl stays as-is, no fallback needed
+  }
+
+  const fallbackAttr = fallbackUrl ? `data-fallback="${fallbackUrl}"` : '';
+
+  return `<img class="poster-image" src="${imgUrl}" alt="${title}" ${fallbackAttr} ${loadMode} decoding="async" width="280" height="240">`;
+}
+
+function checkCachedImages() {
+  document.querySelectorAll('.poster-image:not(.loaded)').forEach(img => {
+    if (img.complete && img.naturalHeight !== 0) {
+      img.classList.add('loaded');
+    }
+  });
+}
+
+document.addEventListener("load", (e) => {
+  if (e.target && e.target.classList && e.target.classList.contains("poster-image")) {
+    e.target.classList.add("loaded");
+  }
+}, true);
+
+document.addEventListener("error", (e) => {
+  if (e.target && e.target.classList && e.target.classList.contains("poster-image")) {
+    if (e.target.dataset.errorHandled !== "true") {
+      e.target.dataset.errorHandled = "true";
+      // Try the fallback URL first (original /medium/ or /small/ before we upgraded it)
+      const fallback = e.target.dataset.fallback;
+      if (fallback && e.target.src !== fallback) {
+        e.target.removeAttribute("srcset");
+        e.target.removeAttribute("sizes");
+        e.target.src = fallback;
+      } else {
+        // Both the large and original failed — show placeholder
+        e.target.removeAttribute("srcset");
+        e.target.removeAttribute("sizes");
+        e.target.src = "../assets/placeholder-poster.jpg";
+      }
+    }
+  }
+}, true);
+
+// =====================
 // Helpers
 // =====================
 function isHomePage() {
@@ -48,7 +111,7 @@ function showSpotlight(i) {
 
   if (!bg || !title || !poster) return;
 
-  const img = anime.src || anime.image || "../assets/placeholder-poster.jpg";
+  const img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
   const name = anime.name || anime.title || "Unknown";
   const description = anime.description || "No description available.";
   const ratingVal = anime.rating || "N/A";
@@ -153,7 +216,7 @@ async function loadHomeFeaturedSlider() {
 
     // Set initial content without animation
     const anime = spotlightData[0];
-    const img = anime.src || anime.image || "../assets/placeholder-poster.jpg";
+    const img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
     const bg = document.querySelector(".spotlight-bg");
     if (bg) bg.style.backgroundImage = `url(${img})`;
 
@@ -167,6 +230,8 @@ async function loadHomeFeaturedSlider() {
     if (poster) {
       poster.src = img;
       poster.alt = anime.name || anime.title || "Unknown";
+      poster.setAttribute("fetchpriority", "high");
+      poster.setAttribute("loading", "eager");
     }
 
     const rating = document.getElementById("spotlightRating");
@@ -314,15 +379,7 @@ function initMenuAndModal() {
       }
     }
 
-    // Create close button
-    let closeBtn = document.getElementById("mobileMenuClose");
-    if (!closeBtn) {
-      closeBtn = document.createElement("div");
-      closeBtn.id = "mobileMenuClose";
-      closeBtn.className = "mobile-menu-close";
-      closeBtn.innerHTML = '&times;';
-      menuContent.insertBefore(closeBtn, menuContent.firstChild);
-    }
+
 
     // Close: remove classes, restore scroll
     const closeMenu = () => {
@@ -349,7 +406,6 @@ function initMenuAndModal() {
       }
     });
 
-    closeBtn.addEventListener("click", closeMenu);
     overlay.addEventListener("click", closeMenu);
 
     document.addEventListener("keydown", (e) => {
@@ -397,6 +453,37 @@ let currentFilteredData = [];
 let activeSortType = "";
 let sortDirection = -1; // -1 for highest first, 1 for lowest first
 let activeGenre = "";
+let currentContainerId = null;
+let currentType = null;
+let isMobileLayout = window.innerWidth <= 768;
+
+window.addEventListener('resize', () => {
+  const newIsMobile = window.innerWidth <= 768;
+  if (isMobileLayout !== newIsMobile) {
+    isMobileLayout = newIsMobile;
+    
+    if (currentContainerId && currentType && currentFilteredData.length > 0) {
+      if (isMobileLayout) {
+        renderMobileRows(currentFilteredData, currentContainerId, currentType);
+      } else {
+        const wrapper = document.getElementById(currentContainerId);
+        if (wrapper) {
+          const parent = wrapper.parentElement;
+          parent.querySelectorAll(".mobile-row-gallery").forEach(row => {
+            const state = mobileRowStates.get(row);
+            if (state && state.observer) {
+              state.observer.disconnect();
+              mobileRowStates.delete(row);
+            }
+          });
+          parent.querySelectorAll(".mobile-row-section").forEach(el => el.remove());
+          wrapper.style.display = "";
+          createCard(currentFilteredData, currentContainerId, currentType);
+        }
+      }
+    }
+  }
+});
 
 async function initGalleries() {
   const seriesGallery = document.getElementById("seriesGallery");
@@ -408,10 +495,10 @@ async function initGalleries() {
   let containerId = null;
   let type = null;
 
-  if (seriesGallery) { fetchUrl = "/api/series"; containerId = "seriesGallery"; type = "series"; }
-  else if (movieGallery) { fetchUrl = "/api/movies"; containerId = "moviesGallery"; type = "movies"; }
-  else if (comingGallery) { fetchUrl = "/api/coming"; containerId = "comingGallery"; type = "coming"; }
-  else if (airingGallery) { fetchUrl = "/api/airing"; containerId = "airingGallery"; type = "airing"; }
+  if (seriesGallery) { fetchUrl = "/api/series"; currentContainerId = "seriesGallery"; currentType = "series"; }
+  else if (movieGallery) { fetchUrl = "/api/movies"; currentContainerId = "moviesGallery"; currentType = "movies"; }
+  else if (comingGallery) { fetchUrl = "/api/coming"; currentContainerId = "comingGallery"; currentType = "coming"; }
+  else if (airingGallery) { fetchUrl = "/api/airing"; currentContainerId = "airingGallery"; currentType = "airing"; }
 
   if (fetchUrl) {
     try {
@@ -419,17 +506,19 @@ async function initGalleries() {
       const data = await res.json();
       currentGalleryData = data;
       currentFilteredData = [...data];
-      if (window.innerWidth <= 768) {
-        renderMobileRows(currentFilteredData, containerId, type);
+      if (isMobileLayout) {
+        renderMobileRows(currentFilteredData, currentContainerId, currentType);
       } else {
-        createCard(currentFilteredData, containerId, type);
+        createCard(currentFilteredData, currentContainerId, currentType);
       }
-      setupFilters(containerId, type);
+      setupFilters(currentContainerId, currentType);
     } catch (err) {
       console.error("Failed to load gallery data:", err);
     }
   }
 }
+
+const mobileRowStates = new Map();
 
 // Splits data into 3 non-overlapping horizontal-scroll rows for mobile
 function renderMobileRows(data, containerId, type) {
@@ -440,6 +529,15 @@ function renderMobileRows(data, containerId, type) {
   wrapper.innerHTML = "";
   // Also clear any sibling mobile rows that were previously injected
   const parent = wrapper.parentElement;
+
+  parent.querySelectorAll(".mobile-row-gallery").forEach(row => {
+    const state = mobileRowStates.get(row);
+    if (state && state.observer) {
+      state.observer.disconnect();
+      mobileRowStates.delete(row);
+    }
+  });
+
   parent.querySelectorAll(".mobile-row-section").forEach(el => el.remove());
 
   const totalItems = data.length;
@@ -457,7 +555,7 @@ function renderMobileRows(data, containerId, type) {
   // Hide the main gallery div (we inject rows into parent instead)
   wrapper.style.display = "none";
 
-  rows.forEach(({ label, items }) => {
+  rows.forEach(({ label, items }, rowIdx) => {
     const section = document.createElement("div");
     section.className = "mobile-row-section";
 
@@ -468,38 +566,112 @@ function renderMobileRows(data, containerId, type) {
     const row = document.createElement("div");
     row.className = "mobile-row-gallery";
 
-    items.forEach(anime => {
-      const card = document.createElement("div");
-      card.className = "anime-card";
-      const img = anime.src || anime.image || "../assets/placeholder-poster.jpg";
-      const title = anime.name || anime.title || "Unknown";
-      const rating = anime.rating || "N/A";
-      const displayTags = anime.genres || anime.category || "";
-      const categories = displayTags ? displayTags.split(",").map(c => c.trim()) : [];
-      let tagsHtml = '<div class="category-tags">';
-      categories.forEach(cat => {
-        if (categories.length > 1 && (cat.toLowerCase() === "series" || cat.toLowerCase() === "movies")) return;
-        tagsHtml += `<span class="category-tag">${cat}</span>`;
-      });
-      tagsHtml += "</div>";
-      card.innerHTML = `
-        <img src="${img}" alt="${title}">
-        <div class="anime-info">
-          <h3>${title}</h3>
-          <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
-          ${tagsHtml}
-        </div>
-      `;
-      card.addEventListener("click", () => {
-        const url = getDetailsUrl(anime.id, type);
-        if (url) window.location.href = url;
-      });
-      row.appendChild(card);
-    });
-
     section.appendChild(heading);
     section.appendChild(row);
     parent.appendChild(section);
+
+    const sentinel = document.createElement("div");
+    sentinel.className = "mobile-sentinel";
+    // Lightweight loading indicator, using flex inline styling
+    sentinel.innerHTML = '<div class="loading-spinner" style="display:none; padding:20px; min-width:60px; text-align:center; color:rgba(255,255,255,0.5); font-size:24px; align-items:center; justify-content:center;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    row.appendChild(sentinel);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const state = mobileRowStates.get(row);
+          if (state && !state.isLoading && state.currentIndex < state.data.length) {
+            loadMoreMobileCards(row, state);
+          }
+        }
+      });
+    }, {
+      root: row,
+      rootMargin: "0px 150px 0px 0px"
+    });
+
+    const state = {
+      data: items,
+      currentIndex: 0,
+      type: type,
+      rowIdx: rowIdx,
+      row: row,
+      sentinel: sentinel,
+      observer: observer,
+      isLoading: false
+    };
+
+    mobileRowStates.set(row, state);
+
+    appendMobileCards(state, 12); // Initial batch of 12 cards
+
+    if (state.currentIndex < state.data.length) {
+      observer.observe(sentinel);
+    } else {
+      sentinel.remove();
+    }
+  });
+
+  checkCachedImages();
+}
+
+function appendMobileCards(state, count) {
+  const { data, type, rowIdx, row, sentinel } = state;
+  let added = 0;
+
+  while (added < count && state.currentIndex < data.length) {
+    const anime = data[state.currentIndex];
+    const isEager = (rowIdx === 0 && state.currentIndex < 2);
+
+    const card = document.createElement("div");
+    card.className = "anime-card";
+    const title = (anime.name || anime.title || "Unknown").replace(/"/g, "&quot;");
+    const rating = anime.rating || "N/A";
+    const displayTags = anime.genres || anime.category || "";
+    const categories = displayTags ? displayTags.split(",").map(c => c.trim()) : [];
+    let tagsHtml = '<div class="category-tags">';
+    categories.forEach(cat => {
+      if (categories.length > 1 && (cat.toLowerCase() === "series" || cat.toLowerCase() === "movies")) return;
+      tagsHtml += `<span class="category-tag">${cat.replace(/</g, "&lt;")}</span>`;
+    });
+    tagsHtml += "</div>";
+    card.innerHTML = `
+      ${getPosterHTML(anime, isEager)}
+      <div class="anime-info">
+        <h3>${title}</h3>
+        <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
+        ${tagsHtml}
+      </div>
+    `;
+    card.addEventListener("click", () => {
+      const url = getDetailsUrl(anime.id, type);
+      if (url) window.location.href = url;
+    });
+
+    row.insertBefore(card, sentinel);
+    state.currentIndex++;
+    added++;
+  }
+}
+
+function loadMoreMobileCards(row, state) {
+  state.isLoading = true;
+  const spinner = state.sentinel.querySelector('.loading-spinner');
+  if (spinner) spinner.style.display = "flex";
+
+  requestAnimationFrame(() => {
+    appendMobileCards(state, 12);
+    checkCachedImages();
+
+    if (state.currentIndex >= state.data.length) {
+      state.observer.disconnect();
+      state.sentinel.remove();
+      mobileRowStates.delete(row);
+    } else {
+      if (spinner) spinner.style.display = "none";
+    }
+
+    state.isLoading = false;
   });
 }
 
@@ -608,7 +780,7 @@ function applyFilters(containerId, type) {
   }
 
   // 3. Render
-  if (window.innerWidth <= 768) {
+  if (isMobileLayout) {
     renderMobileRows(currentFilteredData, containerId, type);
   } else {
     createCard(currentFilteredData, containerId, type);
@@ -620,11 +792,13 @@ function createCard(data, containerId, type, append = false) {
   if (!container) return;
   if (!append) container.innerHTML = "";
 
-  data.forEach((anime) => {
+  const eagerLimit = append ? 4 : 5;
+
+  data.forEach((anime, index) => {
+    const isEager = index < eagerLimit;
     const card = document.createElement("div");
     card.className = "anime-card";
-    const img = anime.src || anime.image || "../assets/placeholder-poster.jpg";
-    const title = anime.name || anime.title || "Unknown";
+    const title = (anime.name || anime.title || "Unknown").replace(/"/g, "&quot;");
     const rating = anime.rating || "N/A";
 
     // Use genres if available, otherwise fallback to category
@@ -635,12 +809,12 @@ function createCard(data, containerId, type, append = false) {
     categories.forEach((cat) => {
       // Don't show 'series' or 'movies' as a tag if we have other genres
       if (categories.length > 1 && (cat.toLowerCase() === "series" || cat.toLowerCase() === "movies")) return;
-      tagsHtml += `<span class="category-tag">${cat}</span>`;
+      tagsHtml += `<span class="category-tag">${cat.replace(/</g, "&lt;")}</span>`;
     });
     tagsHtml += "</div>";
 
     card.innerHTML = `
-        <img src="${img}" alt="${title}">
+        ${getPosterHTML(anime, isEager)}
         <div class="anime-info">
             <h3>${title}</h3>
             <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
@@ -655,6 +829,8 @@ function createCard(data, containerId, type, append = false) {
 
     container.appendChild(card);
   });
+
+  checkCachedImages();
 }
 
 function renderHomeSection(data, containerId, type) {
@@ -700,36 +876,6 @@ function renderHomeSection(data, containerId, type) {
 }
 
 // =====================
-// Mobile Back Button
-// =====================
-function initMobileBackButton() {
-  // Only inject on small screens
-  if (window.innerWidth > 768) return;
-  // Don't inject on home page or if a back button already exists
-  if (document.body.classList.contains("home")) return;
-  if (document.querySelector(".back-btn, .mobile-back-btn")) return;
-
-  const btn = document.createElement("button");
-  btn.className = "mobile-back-btn";
-  btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Back';
-  btn.onclick = () => {
-    if (document.referrer && document.referrer !== window.location.href) {
-      history.back();
-    } else {
-      // Fallback: go to home
-      const inViews = window.location.pathname.includes("/views/");
-      window.location.href = inViews ? "home.html" : "/views/home.html";
-    }
-  };
-
-  // Insert button at top of main content
-  const main = document.querySelector("main") || document.querySelector(".home-section");
-  if (main) {
-    main.insertBefore(btn, main.firstChild);
-  }
-}
-
-// =====================
 // Boot
 // =====================
 async function boot() {
@@ -737,7 +883,6 @@ async function boot() {
   initSearch();
   initGalleries();
   initMenuAndModal();
-  initMobileBackButton();
 
   // Fetch and render top-rated content if on Home page
   if (isHomePage()) {

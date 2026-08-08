@@ -37,9 +37,6 @@
     height: 0 !important;
   }
 
-  .mobile-menu-close {
-    display: none !important;
-  }
 
   .mobile-homler {
     display: none !important;
@@ -75,22 +72,6 @@
     pointer-events: auto !important;
   }
 
-  /* === Close Button === */
-  .mobile-menu-close {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    padding: 12px 20px !important;
-    font-size: 28px !important;
-    color: rgba(255, 255, 255, 0.5) !important;
-    cursor: pointer !important;
-    transition: color 0.2s ease !important;
-    line-height: 1 !important;
-  }
-
-  .mobile-menu-close:hover {
-    color: #ac4a92 !important;
-  }
 
   /* === Mobile Nav Links (cloned from #homler) === */
   .mobile-homler {

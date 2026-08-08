@@ -90,16 +90,8 @@ exports.getDetails = async (req, res) => {
       returnedType = "movies";
     }
 
-    if (
-      (type === "series" && !(item.type === "series" && item.status === "released")) ||
-      (type === "movies" && !(item.type === "movie" && item.status === "released")) ||
-      (type === "coming" && item.status !== "upcoming") ||
-      (type === "airing" && item.status !== "airing")
-    ) {
-      return res.status(400).json({
-        error: "Type does not match anime category",
-      });
-    }
+    // Removed strict type validation so items in MyList that change status do not throw errors
+    // Instead we just return the dynamically computed `returnedType`
 
     res.json({
       ...item,
@@ -145,7 +137,7 @@ exports.getTopRated = async (req, res) => {
           status: "released",
         },
         order: parseRatingOrder(),
-        limit: 16,
+        limit: 48,
       }),
       Anime.findAll({
         where: {
@@ -153,21 +145,21 @@ exports.getTopRated = async (req, res) => {
           status: "released",
         },
         order: parseRatingOrder(),
-        limit: 16,
+        limit: 48,
       }),
       Anime.findAll({
         where: {
           status: "upcoming",
         },
         order: [["releaseDate", "ASC"]],
-        limit: 16,
+        limit: 48,
       }),
       Anime.findAll({
         where: {
           status: "airing",
         },
         order: parseRatingOrder(),
-        limit: 16,
+        limit: 48,
       }),
     ]);
 
@@ -219,7 +211,7 @@ exports.getAnimeByMood = async (req, res) => {
         [Op.or]: conditions
       },
       order: require('sequelize').literal('RAND()'), // MySQL specific
-      limit: 12
+      limit: 48
     });
 
     const result = animes.map(x => {
@@ -455,8 +447,8 @@ exports.getAnimeRecommendations = async (req, res) => {
     // Sort by score descending
     scoredCandidates.sort((a, b) => b.score - a.score);
     
-    // Take top 20, shuffle them to add variety, then take 12
-    let topCandidates = scoredCandidates.slice(0, 20).map(x => x.anime);
+    // Take top 50, shuffle them to add variety, then take 12
+    let topCandidates = scoredCandidates.slice(0, 50).map(x => x.anime);
     topCandidates.sort(() => 0.5 - Math.random());
     const recommendations = topCandidates.slice(0, 12);
 

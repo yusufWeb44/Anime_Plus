@@ -10,6 +10,7 @@ const ANIME_FRAGMENT = `
     native
   }
   coverImage {
+    medium
     large
     extraLarge
   }
@@ -158,7 +159,8 @@ const mapMediaToAnime = (media) => {
 
   return {
     name: title,
-    src: coverImage.extraLarge || coverImage.large || null,
+    src: coverImage.medium || coverImage.large || null,
+    srcLarge: coverImage.extraLarge || coverImage.large || null,
     bannerImage: media.bannerImage || null,
     category: category,
     type: media.format === "MOVIE" ? "movie" : "series",

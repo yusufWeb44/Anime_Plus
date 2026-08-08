@@ -9,6 +9,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <title>AnimePlus - My Profile</title>
+    <meta name="description" content="AnimePlus - My Profile - View details, recommendations, and manage your anime list.">
   <script>
     if (localStorage.getItem("isLoggedIn") === "true") {
       document.documentElement.classList.add("logged-in");
@@ -16,13 +17,17 @@
       document.documentElement.classList.add("logged-out");
     }
   </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 </head>
 <body class="profile-page">
 
   <div id="container">
     <header id="navbar">
       <div id="logo">
-        <a href="home.html">
+        <a href="home.html" aria-label="Go to home page">
           <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
         </a>
       </div>
@@ -123,8 +128,29 @@
        </div>
     </main>
 
+    <!-- MyList Stats Section - Outside the overflow:hidden container -->
+    <section id="profileStatsSection" class="profile-stats-section">
+      <div class="profile-stats-card">
+        <div class="stats-header">
+          <i class="fa-solid fa-chart-pie"></i>
+          <h3>My List Statistics</h3>
+          <span class="stats-subtitle">MyList Stats</span>
+        </div>
+        <div class="stats-chart-wrapper">
+          <div class="chart-container" id="chartContainer">
+            <canvas id="mylistStatsChart"></canvas>
+          </div>
+          <div class="stats-legend" id="statsLegend">
+            <!-- JS will populate this -->
+          </div>
+        </div>
+        <div class="stats-total" id="statsTotal"></div>
+      </div>
+    </section>
+
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="../js/script.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/profile.js"></script>

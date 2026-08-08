@@ -67,16 +67,23 @@ exports.refreshActive = async (req, res) => {
 };
 
 /**
- * Trigger Global Metadata Refresh
+ * Trigger Global Metadata Refresh (Background)
  */
 exports.refreshAll = async (req, res) => {
   try {
-    const { batchSize } = req.body;
-    const count = await maintenanceService.refreshMetadataAll(batchSize || 30);
-    res.json({ message: "Global refresh completed", updated: count });
+    await maintenanceService.startBackgroundRefreshAll();
+    res.json({ message: "Background global refresh started." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+/**
+ * Get Status of Global Metadata Refresh Job
+ */
+exports.getRefreshAllStatus = (req, res) => {
+  const status = maintenanceService.getRefreshAllStatus();
+  res.json(status);
 };
 
 /**

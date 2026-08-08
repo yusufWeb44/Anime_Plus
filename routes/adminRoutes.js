@@ -18,6 +18,7 @@ router.post("/import/related", adminController.importRelated);
 // Maintenance Routes
 router.post("/maintenance/refresh-active", adminController.refreshActive);
 router.post("/maintenance/refresh-all", adminController.refreshAll);
+router.get("/maintenance/refresh-all/status", adminController.getRefreshAllStatus);
 router.post("/maintenance/refresh-series", adminController.refreshSeries);
 router.post("/maintenance/refresh-movies", adminController.refreshMovies);
 router.post("/maintenance/refresh-upcoming", adminController.refreshUpcoming);

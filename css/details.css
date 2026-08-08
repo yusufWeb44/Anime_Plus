@@ -67,6 +67,12 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* When poster-image class is added by JS, keep explicit dimensions intact */
+#detailPoster.poster-image {
+    aspect-ratio: unset;
+    background-color: #0f040f;
+}
+
 .watch-actions {
     display: flex;
     flex-direction: column;

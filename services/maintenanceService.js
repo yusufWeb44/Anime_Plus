@@ -44,16 +44,17 @@ const hasMeaningfulChanges = (anime, updatedData) => {
 
 /**
  * Refreshes metadata for a specific anime record idempotently.
+ * Returns detailed status string.
  */
-const refreshAnimeRecord = async (anime) => {
+const refreshAnimeRecordDetailed = async (anime) => {
   if (!anime.anilistId) {
     console.warn(`[Maintenance] Skipping ${anime.name} - No AniList ID.`);
-    return null;
+    return 'skipped';
   }
 
   if (activeRefreshes.has(anime.id)) {
     console.warn(`[Maintenance] Skipping ${anime.name} - Already refreshing concurrently.`);
-    return null;
+    return 'skipped';
   }
 
   activeRefreshes.add(anime.id);
@@ -67,7 +68,7 @@ const refreshAnimeRecord = async (anime) => {
         lastSuccessfulRefreshAt: new Date()
       });
       console.log(`[Maintenance] Skipped (No changes): ${anime.name}`);
-      return true;
+      return 'unchanged';
     }
 
     // Meaningful changes detected, update all data
@@ -77,13 +78,34 @@ const refreshAnimeRecord = async (anime) => {
       lastSuccessfulRefreshAt: new Date()
     });
     console.log(`[Maintenance] Refreshed: ${anime.name}`);
-    return true;
+    return 'updated';
   } catch (error) {
+    const msg = (error.message || "").toLowerCase();
     console.error(`[Maintenance] Failed to refresh ${anime.name}:`, error.message);
-    return false;
+    
+    if (msg.includes('403') || msg.includes('429') || msg.includes('timeout') || msg.includes('network error')) {
+      return 'rate_limit';
+    }
+    
+    // Normal error (e.g. 404, parsing error). Update timestamp so we don't infinitely retry it in the same run.
+    try {
+      await anime.update({ lastSuccessfulRefreshAt: new Date() });
+    } catch (e) {}
+    
+    return 'error';
   } finally {
     activeRefreshes.delete(anime.id);
   }
+};
+
+/**
+ * Backwards compatible wrapper for refreshAnimeRecord
+ */
+const refreshAnimeRecord = async (anime) => {
+  const status = await refreshAnimeRecordDetailed(anime);
+  if (status === 'skipped') return null;
+  if (status === 'error' || status === 'rate_limit') return false;
+  return true;
 };
 
 /**
@@ -138,35 +160,187 @@ exports.refreshActiveAnime = async (batchSize = 20) => {
 };
 
 /**
- * Maintenance Engine: Refreshes ratings/popularity for all anime.
- * Can be run less frequently.
+ * Job state for background refresh-all
  */
-exports.refreshMetadataAll = async (batchSize = 30) => {
-  console.log(`[Maintenance] Starting Global Metadata Refresh...`);
+const refreshAllJob = {
+  isRunning: false,
+  status: 'idle', // idle, running, completed, error
+  total: 0,
+  processed: 0,
+  remaining: 0,
+  updated: 0,
+  unchanged: 0,
+  skipped: 0,
+  errors: 0
+};
 
-  const items = await Anime.findAll({
-    where: {
-      anilistId: {
-        [Op.ne]: null,
-      },
-      ...getRefreshWhereClause(),
-    },
-    limit: batchSize,
-    order: [
-      ["lastSuccessfulRefreshAt", "ASC"],
-      ["updatedAt", "ASC"]
-    ],
-  });
-
-  let count = 0;
-  for (const item of items) {
-    const success = await refreshAnimeRecord(item);
-    if (success) count++;
-    await sleep(2000);
+/**
+ * Maintenance Engine: Start background refresh for all anime.
+ */
+exports.startBackgroundRefreshAll = async () => {
+  if (refreshAllJob.isRunning) {
+    throw new Error("A refresh-all job is already running.");
   }
 
-  console.log(`[Maintenance] Finished global refresh. Updated ${count} items.`);
-  return count;
+  // Preserve progress if resuming from paused state
+  if (refreshAllJob.status !== 'paused_rate_limit' && refreshAllJob.status !== 'paused') {
+    refreshAllJob.processed = 0;
+    refreshAllJob.updated = 0;
+    refreshAllJob.unchanged = 0;
+    refreshAllJob.skipped = 0;
+    refreshAllJob.errors = 0;
+
+    const totalItems = await Anime.count({
+      where: {
+        anilistId: { [Op.ne]: null },
+        ...getRefreshWhereClause(),
+      }
+    });
+
+    refreshAllJob.total = totalItems;
+    refreshAllJob.remaining = totalItems;
+  } else {
+    console.log("[Maintenance] Resuming paused refresh-all job...");
+  }
+
+  refreshAllJob.isRunning = true;
+  refreshAllJob.status = 'running';
+
+  runRefreshAllLoop().catch(err => {
+    console.error("[Maintenance] Background refresh all failed:", err);
+    refreshAllJob.status = 'error';
+    refreshAllJob.isRunning = false;
+  });
+
+  return refreshAllJob;
+};
+
+const runRefreshAllLoop = async () => {
+  const batchSize = 50;
+  const perAnimeDelay = 2500;
+  const batchDelay = 45000;
+
+  let rateLimitRetries = 0;
+  const retryDelays = [30000, 60000, 120000];
+
+  let currentPhase = 0;
+  const phases = ["airing", "upcoming", "other"];
+
+  while (refreshAllJob.isRunning) {
+    let whereClause = {
+      anilistId: { [Op.ne]: null },
+      ...getRefreshWhereClause(),
+    };
+
+    if (phases[currentPhase] === "airing") {
+      whereClause.status = "airing";
+    } else if (phases[currentPhase] === "upcoming") {
+      whereClause.status = "upcoming";
+    } else {
+      whereClause.status = {
+        [Op.notIn]: ["airing", "upcoming"]
+      };
+    }
+
+    const items = await Anime.findAll({
+      where: whereClause,
+      limit: batchSize,
+      order: [
+        ["lastSuccessfulRefreshAt", "ASC"],
+        ["updatedAt", "ASC"],
+      ],
+    });
+
+    if (items.length === 0) {
+      if (currentPhase < phases.length - 1) {
+        currentPhase++;
+        continue;
+      } else {
+        refreshAllJob.status = "completed";
+        refreshAllJob.isRunning = false;
+        refreshAllJob.remaining = 0;
+
+        console.log("[Maintenance] Refresh-all completed.");
+        break;
+      }
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      if (!refreshAllJob.isRunning) {
+        break;
+      }
+
+      const item = items[i];
+      const status = await refreshAnimeRecordDetailed(item);
+
+      if (status === "rate_limit") {
+        if (rateLimitRetries < retryDelays.length) {
+          const delay = retryDelays[rateLimitRetries];
+
+          console.log(
+            `[Maintenance] Rate limited (403/429). Pausing for ${
+              delay / 1000
+            }s...`
+          );
+
+          refreshAllJob.status = "paused";
+          await sleep(delay);
+
+          rateLimitRetries++;
+          refreshAllJob.status = "running";
+
+          i--; // إعادة محاولة نفس الأنمي
+          continue;
+        }
+
+        console.log(
+          "[Maintenance] Rate limit persisted. Stopping job safely."
+        );
+
+        refreshAllJob.status = "paused_rate_limit";
+        refreshAllJob.isRunning = false;
+        break;
+      }
+
+      // إعادة عداد الـrate limit بعد أي نتيجة طبيعية
+      rateLimitRetries = 0;
+
+      refreshAllJob.processed++;
+
+      if (status === "updated") {
+        refreshAllJob.updated++;
+      } else if (status === "unchanged") {
+        refreshAllJob.unchanged++;
+      } else if (status === "skipped") {
+        refreshAllJob.skipped++;
+      } else if (status === "error") {
+        refreshAllJob.errors++;
+      }
+
+      refreshAllJob.remaining = Math.max(
+        0,
+        refreshAllJob.total - refreshAllJob.processed
+      );
+
+      await sleep(perAnimeDelay);
+    }
+
+    if (refreshAllJob.isRunning) {
+      console.log(
+        `[Maintenance] Batch complete. Waiting ${
+          batchDelay / 1000
+        }s before next batch...`
+      );
+
+      await sleep(batchDelay);
+    }
+  }
+};
+/**
+ * Get status of the background refresh-all job
+ */
+exports.getRefreshAllStatus = () => {
+  return refreshAllJob;
 };
 
 /**

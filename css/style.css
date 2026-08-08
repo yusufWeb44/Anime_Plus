@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
 
 * {
   font-family: "Vollkorn", serif;
@@ -933,11 +932,27 @@ label[for="userIcon"] {
   border-color: rgba(172, 74, 146, 0.4);
 }
 
-.anime-card img {
+.anime-card img, .poster-image {
   width: 100%;
   aspect-ratio: 7/6;
   object-fit: cover;
   display: block;
+}
+
+.poster-image {
+  background-color: #1c0d2e;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.poster-image.loaded {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-image {
+    transition: none;
+  }
 }
 
 .anime-info {

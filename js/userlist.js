@@ -140,12 +140,11 @@ function renderAnimeCards(list) {
     gallery.innerHTML = "";
     gallery.style.display = "grid";
 
-    list.forEach((anime) => {
+    list.forEach((anime, index) => {
         const animeId = anime.id;
         const type = anime.type === 'movie' ? 'movies' : (anime.status === 'upcoming' ? 'coming' : 'series');
         
-        const title = anime.name || "Unknown";
-        const imgSrc = anime.src || "../assets/placeholder-poster.jpg";
+        const title = (anime.name || "Unknown").replace(/"/g, "&quot;");
         const rating = anime.rating || "0.0";
         
         const displayTags = anime.genres || anime.category || "";
@@ -156,7 +155,7 @@ function renderAnimeCards(list) {
 
         let tagsHtml = '<div class="category-tags">';
         cats.forEach((cat) => {
-            tagsHtml += `<span class="category-tag">${cat}</span>`;
+            tagsHtml += `<span class="category-tag">${cat.replace(/</g, "&lt;")}</span>`;
         });
         tagsHtml += "</div>";
 
@@ -176,9 +175,15 @@ function renderAnimeCards(list) {
             }
         }
 
+        // First 5 cards are likely visible above the fold — load eagerly
+        const isEager = index < 5;
+        const posterHtml = typeof getPosterHTML === "function"
+            ? getPosterHTML(anime, isEager)
+            : `<img src="${anime.src || "../assets/placeholder-poster.jpg"}" alt="${title}">`;
+
         card.innerHTML = `
         ${statusBadgeHtml}
-        <img src="${imgSrc}" alt="${title}">
+        ${posterHtml}
         <div class="anime-info">
             <h3>${title}</h3>
             <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
@@ -194,6 +199,9 @@ function renderAnimeCards(list) {
 
         gallery.appendChild(card);
     });
+
+    // Handle images already in browser cache
+    if (typeof checkCachedImages === "function") checkCachedImages();
 }
 
 function initListSearch() {

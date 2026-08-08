@@ -56,11 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        list.forEach((anime) => {
+        list.forEach((anime, index) => {
             const animeId = anime.id;
             const type = anime.type || 'series';
-            const title = anime.name || "Unknown";
-            const imgSrc = anime.src || "../assets/placeholder-poster.jpg";
+            const title = (anime.name || "Unknown").replace(/"/g, "&quot;");
             const rating = anime.rating || "0.0";
 
             const displayTags = anime.genres || anime.category || "";
@@ -71,12 +70,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let tagsHtml = '<div class="category-tags">';
             cats.slice(0, 3).forEach((cat) => {
-                tagsHtml += `<span class="category-tag">${cat}</span>`;
+                tagsHtml += `<span class="category-tag">${cat.replace(/</g, "&lt;")}</span>`;
             });
             tagsHtml += "</div>";
 
+            // Mood results appear after a click — all cards start below fold,
+            // but first 5 are immediately visible after the panel switches
+            const isEager = index < 5;
+            const posterHtml = typeof getPosterHTML === "function"
+                ? getPosterHTML(anime, isEager)
+                : `<img src="${anime.src || "../assets/placeholder-poster.jpg"}" alt="${title}">`;
+
             card.innerHTML = `
-            <img src="${imgSrc}" alt="${title}">
+            ${posterHtml}
             <div class="anime-info">
                 <h3>${title}</h3>
                 <p>Rating: <i class="fa-solid fa-star" style="color: gold;"></i> ${rating}/10</p>
@@ -92,5 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             gallery.appendChild(card);
         });
+
+        // Handle images already in browser cache
+        if (typeof checkCachedImages === "function") checkCachedImages();
     }
 });

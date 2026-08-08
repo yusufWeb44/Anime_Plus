@@ -367,6 +367,7 @@ if (!window.AnimePlusAuthInitialized) {
             const img = document.createElement("img");
             img.src = user.avatar;
             img.id = "userIcon";
+            img.alt = user.username ? `${user.username} Avatar` : "User Avatar";
             img.style.width = "40px";
             img.style.height = "40px";
             img.style.borderRadius = "50%";
