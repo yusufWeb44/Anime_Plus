@@ -27,4 +27,9 @@ router.post("/maintenance/refresh-airing", adminController.refreshAiring);
 // Manual update Routes
 router.patch("/anime/:id/status", adminController.updateStatus);
 
+// Fill Missing Trailers Routes
+router.post("/maintenance/fill-trailers", adminController.fillMissingTrailers);
+router.post("/maintenance/fill-trailers/stop", adminController.stopFillMissingTrailers);
+router.get("/maintenance/fill-trailers/status", adminController.getFillTrailersStatus);
+
 module.exports = router;

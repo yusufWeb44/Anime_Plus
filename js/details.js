@@ -109,6 +109,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ========= Fetch anime details from backend =========
 async function fetchAnimeDetails(type, id) {
+  // Reset trailer state before loading new anime
+  window.currentTrailerUrl = null;
+  const trailerBtnEl = document.getElementById("trailerBtn");
+  if (trailerBtnEl) {
+    trailerBtnEl.disabled = true;
+    trailerBtnEl.style.opacity = "0.5";
+    trailerBtnEl.style.cursor = "not-allowed";
+    trailerBtnEl.style.pointerEvents = "none";
+    trailerBtnEl.title = "No trailer available";
+  }
+
   try {
     const response = await fetch(`/api/anime/${type}/${id}`);
     if (!response.ok) {
@@ -188,17 +199,22 @@ async function fetchAnimeDetails(type, id) {
     if (backEl) backEl.style.backgroundImage = `url(${image})`;
 
     // Store trailer URL for later use
-    if (anime.trailer) {
-      window.currentTrailerUrl = anime.trailer;
-    } else {
-      // Disable trailer button if no trailer available
+    const trailerUrl = anime.trailer && anime.trailer.trim() !== "" && anime.trailer !== "NOT_FOUND"
+      ? anime.trailer : null;
+
+    if (trailerUrl) {
+      window.currentTrailerUrl = trailerUrl;
+      // Enable trailer button now that we have a trailer
       const trailerBtn = document.getElementById("trailerBtn");
       if (trailerBtn) {
-        trailerBtn.disabled = true;
-        trailerBtn.style.opacity = "0.5";
-        trailerBtn.style.cursor = "not-allowed";
+        trailerBtn.disabled = false;
+        trailerBtn.style.opacity = "1";
+        trailerBtn.style.cursor = "pointer";
+        trailerBtn.style.pointerEvents = "auto";
+        trailerBtn.title = "";
       }
     }
+    // else: button stays disabled (already set at the start of this function)
 
     // Categories (Genres)
     const categoryContainer = document.getElementById("detailCategories");

@@ -206,3 +206,31 @@ exports.importRelated = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/**
+ * Start background job to fill missing trailers via YouTube search
+ */
+exports.fillMissingTrailers = async (req, res) => {
+  try {
+    const status = await maintenanceService.startFillMissingTrailers();
+    res.json({ message: "Fill missing trailers job started.", status });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Stop the fill-missing-trailers background job
+ */
+exports.stopFillMissingTrailers = (req, res) => {
+  const status = maintenanceService.stopFillMissingTrailers();
+  res.json({ message: "Fill missing trailers job stopped.", status });
+};
+
+/**
+ * Get status of the fill-missing-trailers background job
+ */
+exports.getFillTrailersStatus = (req, res) => {
+  const status = maintenanceService.getFillTrailersStatus();
+  res.json(status);
+};

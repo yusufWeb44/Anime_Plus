@@ -609,6 +609,16 @@
     margin-bottom: 15px !important;
   }
 
+  /* === News page: reduce loader padding on mobile (was 80px causing large gap) === */
+  .news-page .news-loader {
+    padding: 30px 20px !important;
+  }
+
+  /* === News page: remove large min-height from container on mobile === */
+  .news-page #container {
+    min-height: unset !important;
+  }
+
   /* === Unified label/tag colors inside sections (Recommendations, Mood) === */
   .category-tag {
     background: #ac4a92 !important;
@@ -619,22 +629,6 @@
   .back-to-gallery-wrapper {
     padding: 90px 15px 0 !important;
   }
-
-  .back-btn {
-    background: transparent !important;
-    color: #ac4a92 !important;
-    border: 1.5px solid #ac4a92 !important;
-    padding: 8px 18px !important;
-    border-radius: 30px !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 7px !important;
-  }
-
-
 
   /* === Mobile Row Sections === */
   .mobile-row-section {

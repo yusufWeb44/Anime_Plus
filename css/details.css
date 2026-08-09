@@ -102,6 +102,15 @@
     box-shadow: 0 10px 20px rgba(172, 74, 146, 0.3);
 }
 
+.primary-btn:disabled,
+.primary-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+}
+
 .info-section {
     flex: 1;
     padding-top: 20px;

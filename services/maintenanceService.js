@@ -1,6 +1,7 @@
 const { Anime, Op } = require("../models");
 const anilistService = require("./anilistService");
 const { Sequelize } = require("sequelize");
+const ytSearch = require("yt-search");
 
 /**
  * Cooldown period before an anime can be refreshed again.
@@ -477,3 +478,152 @@ exports.refreshAiring = async (batchSize = 20) => {
   return count;
 };
 
+/**
+ * Job state for fill-missing-trailers background job
+ */
+const fillTrailersJob = {
+  isRunning: false,
+  status: 'idle',   // idle | running | completed | error
+  total: 0,
+  processed: 0,
+  found: 0,
+  notFound: 0,
+  errors: 0,
+};
+
+exports.getFillTrailersStatus = () => fillTrailersJob;
+
+/**
+ * Searches YouTube for the best trailer video for a given anime name.
+ * Returns a YouTube watch URL or null if nothing found.
+ */
+const searchYouTubeTrailer = async (animeName) => {
+  try {
+    const query = `${animeName} anime official trailer`;
+    const result = await ytSearch(query);
+    const videos = (result && result.videos) || [];
+
+    // Pick first video that looks like a trailer and is short enough (< 10 min)
+    const candidate = videos.find((v) => {
+      const title = (v.title || "").toLowerCase();
+      const seconds = v.seconds || 0;
+      return (
+        seconds > 30 &&
+        seconds < 600 &&
+        (title.includes("trailer") || title.includes("pv") || title.includes("promo"))
+      );
+    }) || videos[0]; // fallback: just first result
+
+    if (candidate && candidate.videoId) {
+      return `https://www.youtube.com/watch?v=${candidate.videoId}`;
+    }
+    return null;
+  } catch (err) {
+    console.error(`[FillTrailers] YouTube search failed for "${animeName}":`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Background loop: fills missing trailers for all anime that have no trailer.
+ */
+const runFillTrailersLoop = async () => {
+  const batchSize = 30;
+  const delayBetween = 2000; // 2s between each search to avoid rate limits
+
+  while (fillTrailersJob.isRunning) {
+    const items = await Anime.findAll({
+      where: {
+        [Op.or]: [
+          { trailer: null },
+          { trailer: '' },
+        ],
+        anilistId: { [Op.ne]: null },
+      },
+      limit: batchSize,
+      order: [['updatedAt', 'ASC']],
+    });
+
+    if (items.length === 0) {
+      fillTrailersJob.status = 'completed';
+      fillTrailersJob.isRunning = false;
+      console.log('[FillTrailers] All anime now have trailers. Job complete.');
+      break;
+    }
+
+    for (const anime of items) {
+      if (!fillTrailersJob.isRunning) break;
+
+      try {
+        const url = await searchYouTubeTrailer(anime.name);
+        if (url) {
+          await anime.update({ trailer: url });
+          fillTrailersJob.found++;
+          console.log(`[FillTrailers] ✓ Found trailer for "${anime.name}": ${url}`);
+        } else {
+          // Mark with a placeholder so we don't keep retrying it endlessly
+          await anime.update({ trailer: 'NOT_FOUND' });
+          fillTrailersJob.notFound++;
+          console.log(`[FillTrailers] ✗ No trailer found for "${anime.name}"`);
+        }
+      } catch (err) {
+        fillTrailersJob.errors++;
+        console.error(`[FillTrailers] Error processing "${anime.name}":`, err.message);
+      }
+
+      fillTrailersJob.processed++;
+      fillTrailersJob.total = Math.max(fillTrailersJob.total, fillTrailersJob.processed);
+
+      await sleep(delayBetween);
+    }
+  }
+
+  fillTrailersJob.isRunning = false;
+};
+
+/**
+ * Starts the fill-missing-trailers background job.
+ */
+exports.startFillMissingTrailers = async () => {
+  if (fillTrailersJob.isRunning) {
+    throw new Error('A fill-trailers job is already running.');
+  }
+
+  // Count how many anime are missing trailers
+  const total = await Anime.count({
+    where: {
+      [Op.or]: [
+        { trailer: null },
+        { trailer: '' },
+      ],
+      anilistId: { [Op.ne]: null },
+    },
+  });
+
+  fillTrailersJob.isRunning = true;
+  fillTrailersJob.status = 'running';
+  fillTrailersJob.total = total;
+  fillTrailersJob.processed = 0;
+  fillTrailersJob.found = 0;
+  fillTrailersJob.notFound = 0;
+  fillTrailersJob.errors = 0;
+
+  console.log(`[FillTrailers] Starting — ${total} anime need trailers.`);
+
+  runFillTrailersLoop().catch((err) => {
+    console.error('[FillTrailers] Job crashed:', err.message);
+    fillTrailersJob.status = 'error';
+    fillTrailersJob.isRunning = false;
+  });
+
+  return fillTrailersJob;
+};
+
+/**
+ * Stops the fill-missing-trailers background job.
+ */
+exports.stopFillMissingTrailers = () => {
+  fillTrailersJob.isRunning = false;
+  fillTrailersJob.status = 'idle';
+  return fillTrailersJob;
+};

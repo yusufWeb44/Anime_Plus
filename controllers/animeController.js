@@ -304,24 +304,30 @@ const getFranchiseIds = async (Anime, AnimeRelation, Op, currentAnime) => {
 
   // Post-filter: remove any IDs whose anime name has NO word overlap with the current anime's name
   // This is the final guard against crossover bridges
-  const rootWords = new Set(
-    currentAnime.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
-  );
-  
+  const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'from', 'movie', 'special', 'episode', 'chapter', 'part', 'season', 'ova', 'ona']);
+  const getSignificantWords = (name) => {
+    return new Set(
+      name.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !STOP_WORDS.has(w))
+    );
+  };
+
+  const rootWords = getSignificantWords(currentAnime.name);
+
   const allVisited = Array.from(visitedIds);
   allVisited.shift(); // remove the current anime itself (already added)
-  
+
   const safeIds = [];
   if (allVisited.length > 0) {
     const candidates = await Anime.findAll({
       where: { id: { [Op.in]: allVisited } },
       attributes: ['id', 'name']
     });
-    
+
     for (const c of candidates) {
-      const cWords = new Set(
-        c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
-      );
+      const cWords = getSignificantWords(c.name);
       // Check if there is at least 1 significant word in common
       const intersection = [...rootWords].filter(w => cWords.has(w));
       if (intersection.length > 0) {
@@ -342,14 +348,26 @@ exports.getRelatedAnime = async (req, res) => {
   const { id } = req.params;
   try {
     const { Anime, AnimeRelation, Op } = require("../models");
-    
+
     const currentAnime = await Anime.findByPk(id);
     if (!currentAnime) {
       return res.status(404).json({ error: "Anime not found" });
     }
 
+    // --- JIT Relation Fetching ---
+    // If we haven't checked relations for this anime yet, fetch them on-demand!
+    if (!currentAnime.relationsCheckedAt && currentAnime.anilistId) {
+      try {
+        const ingestionService = require("../services/ingestionService");
+        await ingestionService.syncRelationsForAnime(currentAnime, new Set());
+        // The DB now has the edges, getFranchiseIds will find them!
+      } catch (err) {
+        console.error(`[JIT] Error fetching relations for ${currentAnime.name}:`, err.message);
+      }
+    }
+
     const { franchiseIds, relationTypesMap } = await getFranchiseIds(Anime, AnimeRelation, Op, currentAnime);
-    
+
     // Remove the current anime itself from the related display
     const relatedIds = franchiseIds.filter(fId => fId !== currentAnime.id);
 
@@ -398,6 +416,17 @@ exports.getAnimeRecommendations = async (req, res) => {
       return res.status(404).json({ error: "Anime not found" });
     }
 
+    // --- JIT Relation Fetching ---
+    // Ensure relations are fetched so we accurately exclude the entire franchise
+    if (!currentAnime.relationsCheckedAt && currentAnime.anilistId) {
+      try {
+        const ingestionService = require("../services/ingestionService");
+        await ingestionService.syncRelationsForAnime(currentAnime, new Set());
+      } catch (err) {
+        console.error(`[JIT] Error fetching relations for ${currentAnime.name}:`, err.message);
+      }
+    }
+
     // 1. Get all IDs that belong to the SAME franchise to exclude them
     const { franchiseIds } = await getFranchiseIds(Anime, AnimeRelation, Op, currentAnime);
 
@@ -416,7 +445,7 @@ exports.getAnimeRecommendations = async (req, res) => {
     }
 
     if (conditions.length === 0) {
-       conditions = [{ type: currentAnime.type }];
+      conditions = [{ type: currentAnime.type }];
     }
 
     // 2. Fetch candidates excluding ANY part of the same franchise
@@ -434,7 +463,7 @@ exports.getAnimeRecommendations = async (req, res) => {
       if (anime.genres) {
         const candidateGenres = anime.genres.split(",").map(g => g.trim().toLowerCase());
         const sourceGenres = currentGenres.map(g => g.toLowerCase());
-        
+
         candidateGenres.forEach(g => {
           if (sourceGenres.includes(g)) {
             score += ignoredGenres.includes(g) ? 1 : 3;
@@ -446,7 +475,7 @@ exports.getAnimeRecommendations = async (req, res) => {
 
     // Sort by score descending
     scoredCandidates.sort((a, b) => b.score - a.score);
-    
+
     // Take top 50, shuffle them to add variety, then take 12
     let topCandidates = scoredCandidates.slice(0, 50).map(x => x.anime);
     topCandidates.sort(() => 0.5 - Math.random());
