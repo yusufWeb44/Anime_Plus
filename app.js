@@ -17,10 +17,10 @@ sequelize
   .catch((err) => console.log("Error: " + err));
 
 // Sync tables manually if needed, disabled auto-alter to fix "Too many keys" error
-sequelize
+/*sequelize
   .sync({ alter: false })
   .then(() => console.log("Tables synced..."))
-  .catch((err) => console.log("Sync Error: ", err));
+  .catch((err) => console.log("Sync Error: ", err));*/
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
