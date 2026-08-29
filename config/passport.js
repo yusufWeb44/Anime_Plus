@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { User, Op } = require("../models");
+const { User, Op, sequelize } = require("../models");
 
 passport.use(
   new GoogleStrategy(
@@ -8,6 +8,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -25,7 +26,9 @@ passport.use(
         }
 
         // If not found by googleId, check if email exists (Account Linking)
-        user = await User.findOne({ where: { email } });
+        user = await User.findOne({ 
+          where: { email: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), email.toLowerCase()) } 
+        });
 
         if (user) {
           // Explicitly link the googleId to the existing account

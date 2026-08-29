@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const app = express();
+app.set("trust proxy", 1);
 const port = process.env.PORT || 5000;
 const path = require("path");
 const cookieParser = require("cookie-parser");
@@ -21,6 +23,14 @@ sequelize
   .sync({ alter: false })
   .then(() => console.log("Tables synced..."))
   .catch((err) => console.log("Sync Error: ", err));*/
+
+// Enable CORS with credentials
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || true, // Allow true to reflect request origin, or restrict to specific domain
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
