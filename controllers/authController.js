@@ -168,7 +168,7 @@ exports.googleCallback = async (req, res) => {
     const user = req.user; // Provided by passport
 
     if (!user) {
-      return res.redirect("/views/home.html?error=oauth_failed");
+      return res.redirect("https://anime-plus-8y7s.onrender.com/views/home.html?error=oauth_failed");
     }
 
     const { accessToken, refreshToken } = generateTokens(user.id, user.role);
@@ -178,9 +178,9 @@ exports.googleCallback = async (req, res) => {
 
     // Redirect to frontend with the token in the URL.
     // The frontend will grab it, save it, and clean the URL.
-    return res.redirect(`/views/home.html?token=${accessToken}`);
+    return res.redirect(`https://anime-plus-8y7s.onrender.com/views/home.html?token=${accessToken}`);
   } catch (err) {
-    return res.redirect("/views/home.html?error=oauth_error");
+    return res.redirect("https://anime-plus-8y7s.onrender.com/views/home.html?error=oauth_error");
   }
 };
 

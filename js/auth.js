@@ -5,7 +5,7 @@ if (!window.AnimePlusAuthInitialized) {
 
   window.AnimePlusAuth = {
     currentUser: null,
-    accessToken: null,
+    accessToken: localStorage.getItem("token") || null,
     isAuthLoaded: false,
     isLoggedIn: () => !!window.AnimePlusAuth.currentUser,
     
@@ -16,6 +16,7 @@ if (!window.AnimePlusAuthInitialized) {
       window.AnimePlusAuth.accessToken = null;
       window.AnimePlusAuth.currentUser = null;
       localStorage.setItem("isLoggedIn", "false");
+      localStorage.removeItem("token");
       
       document.documentElement.classList.remove("logged-in");
       document.documentElement.classList.add("logged-out");
@@ -110,6 +111,7 @@ if (!window.AnimePlusAuthInitialized) {
           if (refreshRes.ok) {
             const data = await refreshRes.json();
             window.AnimePlusAuth.accessToken = data.accessToken;
+            localStorage.setItem("token", data.accessToken);
             isRefreshing = false;
             onRefreshed(data.accessToken);
             config.headers = { ...config.headers, "Authorization": `Bearer ${data.accessToken}` };
@@ -118,6 +120,7 @@ if (!window.AnimePlusAuthInitialized) {
             // Refresh failed (token expired/invalid) - log out
             window.AnimePlusAuth.accessToken = null;
             localStorage.setItem("isLoggedIn", "false");
+            localStorage.removeItem("token");
             isRefreshing = false;
             onRefreshed(null);
             // Only redirect if on a page that strictly requires authentication
@@ -159,6 +162,7 @@ if (!window.AnimePlusAuthInitialized) {
     if (tokenParam) {
       // User successfully logged in via OAuth
       window.AnimePlusAuth.accessToken = tokenParam;
+      localStorage.setItem("token", tokenParam);
       localStorage.setItem("isLoggedIn", "true");
       // Clean URL immediately without reloading the page
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -421,6 +425,7 @@ if (!window.AnimePlusAuthInitialized) {
 
           if (res.ok) {
             window.AnimePlusAuth.accessToken = data.accessToken;
+            localStorage.setItem("token", data.accessToken);
             window.AnimePlusAuth.showToast("Logged in successfully!", "success");
             localStorage.setItem("isLoggedIn", "true");
             document.documentElement.classList.remove("logged-out");
@@ -466,6 +471,7 @@ if (!window.AnimePlusAuthInitialized) {
 
           if (res.ok) {
             window.AnimePlusAuth.accessToken = data.accessToken;
+            localStorage.setItem("token", data.accessToken);
             window.AnimePlusAuth.showToast("Account created successfully!", "success");
             localStorage.setItem("isLoggedIn", "true");
             document.documentElement.classList.remove("logged-out");
