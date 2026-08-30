@@ -723,29 +723,28 @@
 .site-footer {
   background: transparent;
   border-top: 1px solid rgba(172, 74, 146, 0.15);
-  padding: 18px 40px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 12px;
-  letter-spacing: 0.3px;
+  padding: 24px 40px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 15px;
+  letter-spacing: 0.5px;
   line-height: 1.6;
   margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .site-footer .footer-logo {
-  height: 28px;
+  height: 40px;
   width: auto;
-  opacity: 0.5;
-  filter: brightness(0.8);
+  display: block; /* Helps vertical alignment */
 }
 
 .site-footer p {
   margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 /* Make footer stick to bottom even on short pages */
@@ -784,17 +783,17 @@ body {
   /* Target the actual button - class is back-btn in details.html */
   .back-to-gallery-wrapper .back-btn,
   .back-to-gallery-wrapper button {
-    font-size: 11px !important;
-    padding: 6px 12px !important;
-    gap: 5px !important;
-    border-radius: 6px !important;
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+    gap: 6px !important;
+    border-radius: 30px !important; /* Oval shape */
     height: auto !important;
     min-height: unset !important;
   }
 
   .back-to-gallery-wrapper .back-btn i,
   .back-to-gallery-wrapper button i {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 }
 
@@ -823,7 +822,7 @@ body {
     font-size: 9px !important;
     padding: 3px 6px !important;
     letter-spacing: 0 !important;
-    border-radius: unset !important;
+    /* Removed border-radius override to restore original oval shape */
   }
 
   /* meta row tighter */
@@ -887,8 +886,14 @@ body {
 
   /* Footer on mobile: slimmer */
   .site-footer {
-    padding: 16px 16px !important;
+    padding: 16px 20px !important;
     font-size: 12px !important;
+    gap: 10px !important;
+    flex-wrap: wrap;
+  }
+
+  .site-footer .footer-logo {
+    height: 28px !important;
   }
 
   .site-footer .footer-links {
