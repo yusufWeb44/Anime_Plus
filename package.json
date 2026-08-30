@@ -28,6 +28,7 @@
     "nodemon": "^3.1.11",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.25.0",
     "sequelize": "^6.37.7",
     "xss": "^1.0.15",
     "yt-search": "^2.13.1"
