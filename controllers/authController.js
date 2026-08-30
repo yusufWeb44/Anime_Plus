@@ -52,11 +52,17 @@ exports.register = async (req, res) => {
     const { username, email, password, confirmPassword } = req.body;
 
     if (!username || !email || !password || !confirmPassword) {
-      return res.status(400).json({ error: "All fields are required." });
+      return res.status(400).json({ error: "Please fill in all the required fields." });
+    }
+
+    // Basic email validation regex before hitting the database
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ error: "Passwords do not match." });
+      return res.status(400).json({ error: "The passwords you entered do not match." });
     }
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -66,14 +72,14 @@ exports.register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [{ email }, { username }],
-      },
-    });
+    const existingUserByEmail = await User.findOne({ where: { email } });
+    if (existingUserByEmail) {
+      return res.status(400).json({ error: "This email address is already registered. Please login instead." });
+    }
 
-    if (existingUser) {
-      return res.status(400).json({ error: "Username or email already exists." });
+    const existingUserByUsername = await User.findOne({ where: { username } });
+    if (existingUserByUsername) {
+      return res.status(400).json({ error: "This username is already taken. Please choose another one." });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -115,25 +121,25 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+      return res.status(400).json({ error: "Please enter your email and password." });
     }
 
     const user = await User.findOne({ where: { email } });
 
     if (!user || !user.isActive) {
-      return res.status(401).json({ error: "Invalid email or password." });
+      return res.status(401).json({ error: "Incorrect email or password." });
     }
 
     if (!user.passwordHash) {
       return res.status(401).json({
-        error: "This account was created via Google. Please login with Google, or click 'Forgot password' to set a password."
+        error: "This account was created via Google. Please use 'Sign in with Google' or set a password via 'Forgot password'."
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password." });
+      return res.status(401).json({ error: "Incorrect email or password." });
     }
 
     const { accessToken, refreshToken } = generateTokens(user.id, user.role);
