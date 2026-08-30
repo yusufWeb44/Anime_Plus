@@ -311,15 +311,25 @@ exports.forgotPassword = async (req, res) => {
     const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : req.protocol;
     const resetUrl = `${protocol}://${host}/views/reset-password.html?token=${token}`;
 
-    // Send Email
+    // Print the reset URL to the console so the admin can copy it from Render logs
+    // since Render Free tier blocks outbound SMTP ports (587).
+    console.log("\n=======================================================");
+    console.log(`🔑 PASSWORD RESET LINK FOR ${user.email}:`);
+    console.log(resetUrl);
+    console.log("=======================================================\n");
+
+    // Send Email (Wrap with a timeout so it doesn't hang forever on Render)
     try {
-      await emailService.sendResetPasswordEmail(user.email, user.username, resetUrl);
+      const emailPromise = emailService.sendResetPasswordEmail(user.email, user.username, resetUrl);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("SMTP Timeout")), 5000));
+      
+      await Promise.race([emailPromise, timeoutPromise]);
     } catch (mailErr) {
-      console.error("Email sending failed:", mailErr);
-      user.resetPasswordToken = null;
-      user.resetPasswordExpires = null;
-      await user.save();
-      return res.status(500).json({ error: "Failed to send reset email. Please try again later." });
+      console.warn("⚠️ Email sending failed (usually blocked on Render Free):", mailErr.message);
+      // We don't return an error here anymore. We let it succeed so the user knows they can check the logs.
+      return res.json({ 
+        message: "Email sending is blocked on this server. Please check the Server Logs (Render Dashboard) to find your reset link!" 
+      });
     }
 
     return res.json({ message: "If an account with that email exists, we have sent a reset link." });
