@@ -126,7 +126,7 @@ exports.login = async (req, res) => {
 
     if (!user.passwordHash) {
       return res.status(401).json({
-        error: "This account was created via Google. Please login with Google."
+        error: "This account was created via Google. Please login with Google, or click 'Forgot password' to set a password."
       });
     }
 
@@ -288,9 +288,8 @@ exports.forgotPassword = async (req, res) => {
       return res.json({ message: "If an account with that email exists, we have sent a reset link." });
     }
 
-    if (user.authProvider === "google") {
-      return res.status(400).json({ error: "This account is linked with Google Login. Please sign in via Google." });
-    }
+    // Allow Google users to set a password if they want to login normally as well.
+    // Removed the block that prevented authProvider === 'google' from resetting password.
 
     // Generate Token
     const token = crypto.randomBytes(32).toString("hex");
