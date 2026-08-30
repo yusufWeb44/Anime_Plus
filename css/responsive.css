@@ -717,16 +717,194 @@
   }
 }
 
-/* Small phone tweaks for mobile rows */
-@media (max-width: 480px) {
-  .mobile-row-gallery .anime-card {
-    flex: 0 0 132px !important;
-    width: 132px !important;
-    min-width: 132px !important;
-    max-width: 132px !important;
+/* =============================================
+   FOOTER — Global (all pages, all screen sizes)
+   ============================================= */
+.site-footer {
+  background: rgba(20, 5, 20, 0.97);
+  border-top: 1px solid rgba(172, 74, 146, 0.2);
+  padding: 24px 40px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  line-height: 1.6;
+  margin-top: auto;
+}
+
+.site-footer a {
+  color: #ac4a92;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.site-footer a:hover {
+  color: #c956ab;
+}
+
+.site-footer .footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.site-footer .footer-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ac4a92;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+/* Make footer stick to bottom even on short pages */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#container,
+#home-main {
+  flex: 1;
+}
+
+/* =============================================
+   LOGO DIM when sidebar is open (mobile)
+   ============================================= */
+@media (max-width: 1024px) {
+  #logo {
+    transition: opacity 0.3s ease;
   }
 
-  .mobile-row-gallery .anime-card img {
-    height: 150px !important;
+  #logo.logo-dimmed {
+    opacity: 0.15;
+  }
+}
+
+/* =============================================
+   BACK TO GALLERY BUTTON — Smaller on mobile
+   ============================================= */
+@media (max-width: 768px) {
+  .back-to-gallery-wrapper {
+    padding: 80px 12px 0 !important;
+  }
+
+  .back-to-gallery-btn {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  .back-to-gallery-btn i {
+    font-size: 13px !important;
+  }
+}
+
+/* =============================================
+   DETAILS PAGE — Categories larger & tighter
+   ============================================= */
+@media (max-width: 768px) {
+  /* Bigger category tags on details page */
+  .details-page .categories .category-tag,
+  .details-page .category-tags .category-tag {
+    font-size: 12px !important;
+    padding: 5px 12px !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.2px !important;
+  }
+
+  .details-page .categories,
+  .details-page .category-tags {
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  /* meta row tighter */
+  .details-page .meta-row {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+/* =============================================
+   GLOBAL MOBILE SPACING AUDIT — Remove excess gaps
+   ============================================= */
+@media (max-width: 768px) {
+  /* Section padding tighter */
+  .home-section {
+    padding: 10px 10px 20px !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Remove extra top gap on first section after spotlight */
+  #top-rated .home-section:first-child {
+    padding-top: 8px !important;
+  }
+
+  /* Section title less margin */
+  .section-title {
+    margin-bottom: 8px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Spotlight bottom margin smaller */
+  #spotlight-section {
+    margin-bottom: 16px !important;
+  }
+
+  /* Container: tighter outer margins */
+  #container {
+    margin: 8px 8px 0 !important;
+  }
+
+  /* Remove bottom padding from container so footer sits flush */
+  #container {
+    padding-bottom: 0 !important;
+  }
+
+  /* Profile page: reduce top cover gap */
+  .profile-cover {
+    height: 140px !important;
+  }
+
+  /* Details page: remove excess top padding */
+  .details-page .details-content {
+    padding: 20px 12px !important;
+    gap: 20px !important;
+  }
+
+  /* News / mood / rec page: remove top gaps */
+  .home-section {
+    padding-top: 8px !important;
+  }
+
+  /* Footer on mobile: slimmer */
+  .site-footer {
+    padding: 16px 16px !important;
+    font-size: 12px !important;
+  }
+
+  .site-footer .footer-links {
+    gap: 14px !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #container {
+    margin: 6px 6px 0 !important;
+  }
+
+  .home-section {
+    padding: 6px 8px 16px !important;
+  }
+
+  .site-footer .footer-links {
+    flex-direction: column;
+    gap: 8px !important;
   }
 }

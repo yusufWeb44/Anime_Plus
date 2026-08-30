@@ -386,6 +386,8 @@ function initMenuAndModal() {
       menuContent.classList.remove("menu-open");
       overlay.classList.remove("active");
       document.body.style.overflow = "";
+      const logo = document.getElementById("logo");
+      if (logo) logo.classList.remove("logo-dimmed");
     };
 
     // Open: only works on mobile/tablet (<=1024px)
@@ -394,6 +396,8 @@ function initMenuAndModal() {
       menuContent.classList.add("menu-open");
       overlay.classList.add("active");
       document.body.style.overflow = "hidden";
+      const logo = document.getElementById("logo");
+      if (logo) logo.classList.add("logo-dimmed");
     };
 
     menuIcon.addEventListener("click", (e) => {

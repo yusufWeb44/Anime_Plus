@@ -618,9 +618,35 @@ if (!window.AnimePlusAuthInitialized) {
       }
     }
 
+    // ─── Global Footer Injection ─────────────────────────────────────────────
+    function injectFooter() {
+      // Don't inject on reset-password page (standalone layout)
+      if (window.location.pathname.includes("reset-password.html")) return;
+
+      const existing = document.querySelector(".site-footer");
+      if (existing) return; // Already injected
+
+      const footer = document.createElement("footer");
+      footer.className = "site-footer";
+      footer.innerHTML = `
+        <div class="footer-brand">Anime+</div>
+        <div class="footer-links">
+          <a href="home.html">Home</a>
+          <a href="series.html">Series</a>
+          <a href="movies.html">Movies</a>
+          <a href="news.html">News</a>
+          <a href="contact.html">Contact Us</a>
+        </div>
+        <p>&copy; ${new Date().getFullYear()} AnimePlus &mdash; All rights reserved. Built with ❤️ for anime fans.</p>
+      `;
+
+      document.body.appendChild(footer);
+    }
+
     addSidebarLogo();
     setupForgotPassword();
     checkShowLoginQuery();
+    injectFooter();
     loadCurrentUser();
   });
 }
