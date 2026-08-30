@@ -1,7 +1,7 @@
 // js/details.js (Server-backed version)
 
 // ========= DOM Ready =========
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const animeId = urlParams.get("id");
   const animeType = urlParams.get("type");
@@ -22,30 +22,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backBtn = document.getElementById("backToGallery");
   const trailerBtn = document.getElementById("trailerBtn");
 
-  if (window.showGlobalLoader) window.showGlobalLoader();
+  // Load basic details
+  fetchAnimeDetails(animeType, animeId);
 
-  try {
-    // Load basic details
-    await fetchAnimeDetails(animeType, animeId);
+  // Load user actions from server (if logged in)
+  let checks = 0;
+  const interval = setInterval(() => {
+    if (window.AnimePlusAuth?.isAuthLoaded || checks > 40) { // wait up to 2 seconds
+      clearInterval(interval);
+      loadUserActionsUI(animeType, animeId);
+    }
+    checks++;
+  }, 50);
 
-    // Load user actions from server (if logged in)
-    let checks = 0;
-    const interval = setInterval(() => {
-      if (window.AnimePlusAuth?.isAuthLoaded || checks > 40) { // wait up to 2 seconds
-        clearInterval(interval);
-        loadUserActionsUI(animeType, animeId);
-      }
-      checks++;
-    }, 50);
-
-    // Load related and recommendations sections
-    await loadRelatedContent(animeId, animeType);
-    await loadRecommendationsContent(animeId, animeType);
-  } catch (err) {
-    console.error("Initialization error:", err);
-  } finally {
-    if (window.hideGlobalLoader) window.hideGlobalLoader();
-  }
+  // Load related and recommendations sections
+  loadRelatedContent(animeId, animeType);
+  loadRecommendationsContent(animeId, animeType);
 
   // Event Listeners
   const dropdownMenu = document.getElementById("watchlistDropdown");
