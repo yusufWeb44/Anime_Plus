@@ -990,6 +990,15 @@ label[for="userIcon"] {
   margin-top: 5px;
 }
 
+.details-page .anime-loader-overlay {
+  background-color: #0f040f !important; /* Match details backdrop */
+}
+
+/* Hide footer robustly when loader is active */
+body.loading-active .site-footer {
+  display: none !important;
+}
+
 .category-tag {
   background: #ac4a92 !important;
   color: white !important;

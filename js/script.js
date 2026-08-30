@@ -86,8 +86,7 @@ window.showGlobalLoader = function() {
     }
   }
   loader.style.display = 'flex';
-  const footer = document.querySelector('.site-footer');
-  if (footer) footer.style.display = 'none';
+  document.body.classList.add('loading-active');
 };
 
 window.hideGlobalLoader = function() {
@@ -95,8 +94,7 @@ window.hideGlobalLoader = function() {
   if (loader) {
     loader.style.display = 'none';
   }
-  const footer = document.querySelector('.site-footer');
-  if (footer) footer.style.display = 'flex';
+  document.body.classList.remove('loading-active');
 };
 
 function isHomePage() {
