@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { User, RefreshToken, Op, sequelize } = require("../models");
+const { User, RefreshToken, Op } = require("../models");
 
 const generateTokens = (userId, role) => {
   const accessToken = jwt.sign(
@@ -41,7 +41,7 @@ const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
@@ -68,10 +68,7 @@ exports.register = async (req, res) => {
 
     const existingUser = await User.findOne({
       where: {
-        [Op.or]: [
-          { email: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), email.toLowerCase()) },
-          { username }
-        ],
+        [Op.or]: [{ email }, { username }],
       },
     });
 
@@ -121,9 +118,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: "Email and password are required." });
     }
 
-    const user = await User.findOne({ 
-      where: { email: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), email.toLowerCase()) } 
-    });
+    const user = await User.findOne({ where: { email } });
 
     if (!user || !user.isActive) {
       return res.status(401).json({ error: "Invalid email or password." });
@@ -168,7 +163,7 @@ exports.googleCallback = async (req, res) => {
     const user = req.user; // Provided by passport
 
     if (!user) {
-      return res.redirect("https://anime-plus-8y7s.onrender.com/views/home.html?error=oauth_failed");
+      return res.redirect("/views/home.html?error=oauth_failed");
     }
 
     const { accessToken, refreshToken } = generateTokens(user.id, user.role);
@@ -178,9 +173,9 @@ exports.googleCallback = async (req, res) => {
 
     // Redirect to frontend with the token in the URL.
     // The frontend will grab it, save it, and clean the URL.
-    return res.redirect(`https://anime-plus-8y7s.onrender.com/views/home.html?token=${accessToken}`);
+    return res.redirect(`/views/home.html?token=${accessToken}`);
   } catch (err) {
-    return res.redirect("https://anime-plus-8y7s.onrender.com/views/home.html?error=oauth_error");
+    return res.redirect("/views/home.html?error=oauth_error");
   }
 };
 
@@ -286,9 +281,7 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
-    const user = await User.findOne({ 
-      where: { email: sequelize.where(sequelize.fn('LOWER', sequelize.col('email')), email.toLowerCase()) } 
-    });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       // Return same message to prevent email enumeration
       return res.json({ message: "If an account with that email exists, we have sent a reset link." });
@@ -376,4 +369,3 @@ exports.resetPassword = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-

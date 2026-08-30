@@ -1,8 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
 const app = express();
-app.set("trust proxy", 1);
 const port = process.env.PORT || 5000;
 const path = require("path");
 const cookieParser = require("cookie-parser");
@@ -12,25 +10,59 @@ require("./config/passport");
 
 // Import from models (initializes DB and models)
 const { sequelize } = require("./models");
+const { DataTypes } = require("sequelize");
 
-sequelize
-  .authenticate()
-  .then(() => console.log("Database connected..."))
-  .catch((err) => console.log("Error: " + err));
+// Auto-migration: safely add missing columns on every startup
+async function runMigrations() {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connected...");
 
-// Sync tables manually if needed, disabled auto-alter to fix "Too many keys" error
-/*sequelize
-  .sync({ alter: false })
-  .then(() => console.log("Tables synced..."))
-  .catch((err) => console.log("Sync Error: ", err));*/
+    const qi = sequelize.getQueryInterface();
+    const tableDesc = await qi.describeTable("Users");
 
-// Enable CORS with credentials
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || true, // Allow true to reflect request origin, or restrict to specific domain
-    credentials: true,
-  })
-);
+    const columnsToAdd = [
+      { name: "googleId",              def: { type: DataTypes.STRING,  allowNull: true } },
+      { name: "coverImage",            def: { type: DataTypes.STRING,  allowNull: true, defaultValue: "../assets/default-cover.jpg" } },
+      { name: "bio",                   def: { type: DataTypes.TEXT,    allowNull: true } },
+      { name: "location",              def: { type: DataTypes.STRING,  allowNull: true } },
+      { name: "birthDate",             def: { type: DataTypes.DATEONLY, allowNull: true } },
+      { name: "resetPasswordToken",    def: { type: DataTypes.STRING,  allowNull: true } },
+      { name: "resetPasswordExpires",  def: { type: DataTypes.DATE,    allowNull: true } },
+    ];
+
+    for (const col of columnsToAdd) {
+      if (!tableDesc[col.name]) {
+        await qi.addColumn("Users", col.name, col.def);
+        console.log(`[Migration] Added column: ${col.name}`);
+      }
+    }
+
+    // Fix authProvider ENUM to include 'google' if missing
+    try {
+      await sequelize.query(
+        "ALTER TABLE `Users` MODIFY COLUMN `authProvider` ENUM('local','google') NOT NULL DEFAULT 'local'"
+      );
+      console.log("[Migration] Ensured authProvider ENUM includes 'google'.");
+    } catch (enumErr) {
+      console.warn("[Migration] authProvider ENUM update skipped:", enumErr.message);
+    }
+
+    // Add unique index on googleId if not exists
+    try {
+      await qi.addIndex("Users", ["googleId"], { unique: true, name: "users_google_id" });
+      console.log("[Migration] Added unique index on googleId");
+    } catch (_) {
+      // Index already exists, ignore
+    }
+
+    console.log("[Migration] Done.");
+  } catch (err) {
+    console.error("[Migration Error]", err.message);
+  }
+}
+
+runMigrations();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -69,7 +101,8 @@ app.get("/", (req, res) => {
 // Global Error Handler - catches any unhandled errors in routes/middleware
 app.use((err, req, res, next) => {
   console.error("[Global Error Handler]", err.stack || err.message || err);
-  res.status(500).json({ error: "Internal server error" });
+  const isDev = process.env.NODE_ENV !== "production";
+  res.status(500).json({ error: "Internal server error", ...(isDev && { detail: err.message }) });
 });
 
 // Prevent unhandled promise rejections from crashing the server

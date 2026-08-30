@@ -1,59 +1,30 @@
 // js/auth.js
 
-// 1. Self-Executing Function to grab token from URL IMMEDIATELY before anything else runs
-(function captureTokenFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get("token");
-  const errorParam = urlParams.get("error");
-
-  if (token) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("isLoggedIn", "true");
-    // Clean the URL immediately without reloading the page
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  if (errorParam) {
-    // Store error to show toast later when DOM is ready
-    window._oauthError = errorParam;
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-})();
-
 if (!window.AnimePlusAuthInitialized) {
   window.AnimePlusAuthInitialized = true;
 
   window.AnimePlusAuth = {
     currentUser: null,
-    accessToken: localStorage.getItem("token") || null,
+    accessToken: null,
     isAuthLoaded: false,
     isLoggedIn: () => !!window.AnimePlusAuth.currentUser,
     
-    // 3. Logout logic
     logout: async () => {
       try {
         await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      } catch (e) {
-        console.error("Logout request failed", e);
-      }
-      // Clear data
+      } catch (e) {}
       window.AnimePlusAuth.accessToken = null;
       window.AnimePlusAuth.currentUser = null;
       localStorage.setItem("isLoggedIn", "false");
-      localStorage.removeItem("token");
       
-      // Update UI
       document.documentElement.classList.remove("logged-in");
       document.documentElement.classList.add("logged-out");
       if (window.AnimePlusAuth.updateNavbarLoggedOut) {
         window.AnimePlusAuth.updateNavbarLoggedOut();
       }
       
-      // Redirect if needed
       if (window.location.pathname.includes("profile.html") || window.location.pathname.includes("edit-profile.html")) {
         window.location.href = "home.html";
-      } else {
-        window.location.reload();
       }
     },
     
@@ -78,6 +49,7 @@ if (!window.AnimePlusAuthInitialized) {
       }
 
       container.innerHTML = "";
+
       const toast = document.createElement("div");
       toast.className = `toast toast-${type}`;
       toast.innerHTML = `
@@ -86,7 +58,9 @@ if (!window.AnimePlusAuthInitialized) {
       `;
 
       container.appendChild(toast);
+      
       setTimeout(() => toast.classList.add("show"), 10);
+
       setTimeout(() => {
         toast.classList.remove("show");
         setTimeout(() => toast.remove(), 300);
@@ -108,24 +82,22 @@ if (!window.AnimePlusAuthInitialized) {
     let [resource, config] = args;
     if (!config) config = {};
     
-    // Always include credentials for cookies (RefreshToken) 
+    // Always include credentials to send cookies (like RefreshToken) only for same-origin requests
     const isLocalRequest = typeof resource === "string" && (resource.startsWith("/") || resource.startsWith(window.location.origin));
     if (isLocalRequest) {
       config.credentials = "include";
     }
 
-    // Inject Access Token from localStorage (Always get the latest)
-    const currentToken = localStorage.getItem("token") || window.AnimePlusAuth.accessToken;
-    if (currentToken) {
+    // Inject Access Token
+    if (window.AnimePlusAuth && window.AnimePlusAuth.accessToken) {
       config.headers = {
         ...config.headers,
-        "Authorization": `Bearer ${currentToken}`
+        "Authorization": `Bearer ${window.AnimePlusAuth.accessToken}`
       };
     }
 
     let response = await originalFetch(resource, config);
 
-    // Handle 401 Unauthorized
     if (response.status === 401 && !resource.toString().includes("/api/auth/login") && !resource.toString().includes("/api/auth/refresh") && !resource.toString().includes("/api/auth/register")) {
       if (!isRefreshing) {
         isRefreshing = true;
@@ -138,21 +110,17 @@ if (!window.AnimePlusAuthInitialized) {
           if (refreshRes.ok) {
             const data = await refreshRes.json();
             window.AnimePlusAuth.accessToken = data.accessToken;
-            localStorage.setItem("token", data.accessToken);
             isRefreshing = false;
             onRefreshed(data.accessToken);
-            
-            // Retry original request
             config.headers = { ...config.headers, "Authorization": `Bearer ${data.accessToken}` };
             return originalFetch(resource, config);
           } else {
             // Refresh failed (token expired/invalid) - log out
             window.AnimePlusAuth.accessToken = null;
             localStorage.setItem("isLoggedIn", "false");
-            localStorage.removeItem("token");
             isRefreshing = false;
             onRefreshed(null);
-            
+            // Only redirect if on a page that strictly requires authentication
             if (window.location.pathname.includes("profile.html") || window.location.pathname.includes("edit-profile.html")) {
               window.location.href = "home.html";
             }
@@ -183,32 +151,101 @@ if (!window.AnimePlusAuthInitialized) {
   // ---------------------------------
 
   document.addEventListener("DOMContentLoaded", () => {
-    // Show OAuth Errors if any
-    if (window._oauthError) {
+    // --- OAUTH REDIRECT & ERROR HANDLING ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get("error");
+    const tokenParam = urlParams.get("token");
+
+    if (tokenParam) {
+      // User successfully logged in via OAuth
+      window.AnimePlusAuth.accessToken = tokenParam;
+      localStorage.setItem("isLoggedIn", "true");
+      // Clean URL immediately without reloading the page
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (errorParam) {
       setTimeout(() => {
-        if (window._oauthError === "oauth_failed") {
+        if (errorParam === "oauth_failed") {
           window.AnimePlusAuth.showToast("Google Login Failed", "error");
-        } else if (window._oauthError === "oauth_error") {
+        } else if (errorParam === "oauth_error") {
           window.AnimePlusAuth.showToast("An error occurred during Google Login", "error");
         }
-        window._oauthError = null;
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
       }, 500);
     }
+    // ----------------------------
 
     const style = document.createElement('style');
     style.textContent = `
-      #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-      .toast { background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: translateX(120%); transition: transform 0.3s ease-in-out; font-family: inherit; }
-      .toast.show { transform: translateX(0); }
+      #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        background: #333;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(120%);
+        transition: transform 0.3s ease-in-out;
+        font-family: inherit;
+      }
+      .toast.show {
+        transform: translateX(0);
+      }
       .toast-error { border-left: 4px solid #ff4d4d; }
       .toast-success { border-left: 4px solid #4dff88; }
-      #logoutBtn { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 14px; margin-left: 10px; padding: 5px 10px; border-radius: 4px; transition: background 0.2s; }
-      #logoutBtn:hover { background: rgba(255, 77, 77, 0.1); }
-      .password-wrapper { position: relative; width: 100%; display: block; }
-      .password-wrapper input { width: 100%; padding-right: 40px !important; margin-bottom: 0 !important; }
-      .password-wrapper .toggle-eye { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #aaa; cursor: pointer; transition: color 0.2s; font-size: 16px; }
-      .password-wrapper .toggle-eye:hover { color: #ac4a92; }
-      #loginform #inputs > .password-wrapper, #sign > .password-wrapper { margin-bottom: 15px; }
+      #logoutBtn {
+        background: none;
+        border: none;
+        color: #ff4d4d;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+      #logoutBtn:hover {
+        background: rgba(255, 77, 77, 0.1);
+      }
+      .password-wrapper {
+        position: relative;
+        width: 100%;
+        display: block;
+      }
+      .password-wrapper input {
+        width: 100%;
+        padding-right: 40px !important; 
+        margin-bottom: 0 !important; 
+      }
+      .password-wrapper .toggle-eye {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+        cursor: pointer;
+        transition: color 0.2s;
+        font-size: 16px;
+      }
+      .password-wrapper .toggle-eye:hover {
+        color: #ac4a92;
+      }
+      #loginform #inputs > .password-wrapper, #sign > .password-wrapper {
+        margin-bottom: 15px;
+      }
     `;
     document.head.appendChild(style);
 
@@ -224,6 +261,7 @@ if (!window.AnimePlusAuthInitialized) {
           wrapPasswordInput(inputs[1]);
         }
       }
+
       if (signupForm) {
         const inputs = signupForm.querySelectorAll("input");
         if (inputs[0]) inputs[0].placeholder = "Username";
@@ -237,6 +275,7 @@ if (!window.AnimePlusAuthInitialized) {
           wrapPasswordInput(inputs[3]);
         }
       }
+
       // Hook up Google Login
       const googleIcons = document.querySelectorAll(".fa-google");
       googleIcons.forEach(icon => {
@@ -249,13 +288,17 @@ if (!window.AnimePlusAuthInitialized) {
 
     function wrapPasswordInput(inputEl) {
       if (!inputEl || inputEl.parentNode.classList.contains("password-wrapper")) return;
+
       const wrapper = document.createElement("div");
       wrapper.className = "password-wrapper";
+      
       inputEl.parentNode.insertBefore(wrapper, inputEl);
       wrapper.appendChild(inputEl);
+
       const eyeIcon = document.createElement("i");
-      eyeIcon.className = "fa-solid fa-eye-slash toggle-eye"; 
+      eyeIcon.className = "fa-solid fa-eye-slash toggle-eye"; // Initial hidden state
       wrapper.appendChild(eyeIcon);
+
       eyeIcon.addEventListener("click", () => {
         if (inputEl.type === "password") {
           inputEl.type = "text";
@@ -275,36 +318,23 @@ if (!window.AnimePlusAuthInitialized) {
     const loginBtn = loginBtnWrapper ? loginBtnWrapper.querySelector("button") : null;
     const profileSection = document.getElementById("profile");
 
-    // 2. Check Auth (loadCurrentUser)
     async function loadCurrentUser() {
-      // Ensure we have the latest token
-      const currentToken = localStorage.getItem("token");
-      
       try {
-        const res = await fetch("/api/auth/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(currentToken && { "Authorization": `Bearer ${currentToken}` })
-          },
-          credentials: "include"
-        });
-        
+        const res = await fetch("/api/auth/me");
         const data = await res.json();
         
-        if (res.ok && data.user) {
+        if (data.user) {
           localStorage.setItem("isLoggedIn", "true");
           document.documentElement.classList.remove("logged-out");
           document.documentElement.classList.add("logged-in");
+          
           window.AnimePlusAuth.currentUser = data.user;
           window.AnimePlusAuth.updateNavbarLoggedIn(data.user);
         } else {
-          // If 401 or no user, wipe data
           localStorage.setItem("isLoggedIn", "false");
-          localStorage.removeItem("token");
-          window.AnimePlusAuth.accessToken = null;
           document.documentElement.classList.remove("logged-in");
           document.documentElement.classList.add("logged-out");
+          
           window.AnimePlusAuth.currentUser = null;
           window.AnimePlusAuth.updateNavbarLoggedOut();
         }
@@ -319,10 +349,12 @@ if (!window.AnimePlusAuthInitialized) {
     window.AnimePlusAuth.updateNavbarLoggedIn = function(user) {
       if (loginBtn) {
         loginBtn.style.display = "none";
-        loginBtn.style.visibility = "visible"; 
+        loginBtn.style.visibility = "visible"; // Reset visibility just in case
       }
+      
       if (profileSection) {
         profileSection.style.display = "flex";
+        // Make profile section clickable to route to profile page
         profileSection.style.cursor = "pointer";
         profileSection.onclick = () => window.location.href = "profile.html";
         
@@ -354,6 +386,7 @@ if (!window.AnimePlusAuthInitialized) {
         loginBtn.style.display = "block";
         loginBtn.style.visibility = "visible";
       }
+      
       if (profileSection) {
         profileSection.style.display = "none";
         const label = profileSection.querySelector("label");
@@ -388,7 +421,6 @@ if (!window.AnimePlusAuthInitialized) {
 
           if (res.ok) {
             window.AnimePlusAuth.accessToken = data.accessToken;
-            localStorage.setItem("token", data.accessToken);
             window.AnimePlusAuth.showToast("Logged in successfully!", "success");
             localStorage.setItem("isLoggedIn", "true");
             document.documentElement.classList.remove("logged-out");
@@ -434,7 +466,6 @@ if (!window.AnimePlusAuthInitialized) {
 
           if (res.ok) {
             window.AnimePlusAuth.accessToken = data.accessToken;
-            localStorage.setItem("token", data.accessToken);
             window.AnimePlusAuth.showToast("Account created successfully!", "success");
             localStorage.setItem("isLoggedIn", "true");
             document.documentElement.classList.remove("logged-out");
@@ -464,6 +495,7 @@ if (!window.AnimePlusAuthInitialized) {
     function addSidebarLogo() {
       const menuContent = document.getElementById("menuContent");
       if (!menuContent) return;
+      
       const existingLogo = document.getElementById("sidebarLogo");
       if (existingLogo) return;
 
@@ -499,6 +531,8 @@ if (!window.AnimePlusAuthInitialized) {
       
       forgotLink.addEventListener("click", (e) => {
         e.preventDefault();
+        
+        // Hide login form and items
         if (loginForm) loginForm.style.display = "none";
         if (itemsContainer) itemsContainer.style.display = "none";
         
@@ -506,8 +540,8 @@ if (!window.AnimePlusAuthInitialized) {
         if (!forgotForm) {
           forgotForm = document.createElement("form");
           forgotForm.id = "forgotform";
-          forgotForm.style.display = "block"; 
-          forgotForm.innerHTML = \`
+          forgotForm.style.display = "block"; // override default none
+          forgotForm.innerHTML = `
             <span class="close">&times;</span>
             <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="Logo" />
             <h3 style="color:white; margin-bottom:10px; font-size: 24px; font-weight: bold;">Forgot Password</h3>
@@ -519,10 +553,11 @@ if (!window.AnimePlusAuthInitialized) {
             </div>
             <button type="submit">Send Reset Link</button>
             <a href="#" id="gotologin" style="display:block; font-size:14px; color:#ac4a92; text-decoration:none; margin-top:15px; text-align:center;">Back to Login</a>
-          \`;
+          `;
           
           modalContent.appendChild(forgotForm);
           
+          // Setup event handlers
           forgotForm.querySelector(".close").addEventListener("click", () => {
             const modal = document.getElementById("loginModal");
             if (modal) modal.style.display = "none";
@@ -574,7 +609,6 @@ if (!window.AnimePlusAuthInitialized) {
     }
 
     function checkShowLoginQuery() {
-      const urlParams = new URLSearchParams(window.location.search);
       const showLogin = urlParams.get("showLogin");
       if (showLogin === "true") {
         setTimeout(() => {
@@ -587,6 +621,6 @@ if (!window.AnimePlusAuthInitialized) {
     addSidebarLogo();
     setupForgotPassword();
     checkShowLoginQuery();
-    loadCurrentUser(); // Start authentication flow
+    loadCurrentUser();
   });
 }
