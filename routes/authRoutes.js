@@ -16,7 +16,8 @@ router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password", authController.resetPassword);
 
 // Google OAuth
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false, prompt: "select_account" }));
+
 router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/views/home.html?error=oauth_failed" }), authController.googleCallback);
 
 module.exports = router;
