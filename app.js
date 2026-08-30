@@ -18,6 +18,10 @@ async function runMigrations() {
     await sequelize.authenticate();
     console.log("Database connected...");
 
+    // Create any missing tables (e.g., RefreshTokens) safely without altering existing ones
+    await sequelize.sync({ alter: false });
+    console.log("[Migration] Ensured all missing tables are created.");
+
     const qi = sequelize.getQueryInterface();
     const tableDesc = await qi.describeTable("Users");
 
