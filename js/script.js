@@ -66,6 +66,18 @@ document.addEventListener("error", (e) => {
 // =====================
 // Helpers
 // =====================
+window.showGlobalLoader = function(containerId) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="anime-loader-wrapper">
+        <div class="anime-spinner"></div>
+        <div class="anime-loader-text">Loading...</div>
+      </div>
+    `;
+  }
+};
+
 function isHomePage() {
   // ✅ أنت عامل body class="home" بالـ home.html
   return document.body.classList.contains("home");
@@ -505,6 +517,7 @@ async function initGalleries() {
   else if (airingGallery) { fetchUrl = "/api/airing"; currentContainerId = "airingGallery"; currentType = "airing"; }
 
   if (fetchUrl) {
+    window.showGlobalLoader(currentContainerId);
     try {
       const res = await fetch(fetchUrl);
       const data = await res.json();
