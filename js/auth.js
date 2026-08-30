@@ -156,7 +156,7 @@ if (!window.AnimePlusAuthInitialized) {
     const errorParam = urlParams.get("error");
     const tokenParam = urlParams.get("token");
 
-    if (tokenParam) {
+    if (tokenParam && !window.location.pathname.includes("reset-password.html")) {
       // User successfully logged in via OAuth
       window.AnimePlusAuth.accessToken = tokenParam;
       localStorage.setItem("isLoggedIn", "true");
