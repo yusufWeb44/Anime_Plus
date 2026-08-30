@@ -19,29 +19,25 @@ document.addEventListener("DOMContentLoaded", () => {
         card.addEventListener("click", async () => {
             const mood = card.getAttribute("data-mood");
             const moodText = card.querySelector("h3").textContent;
-            
+
             // Show loading state
             cardsContainer.style.display = "none";
             resultsContainer.style.display = "block";
             resultsTitle.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Finding ${moodText} Anime...`;
             gallery.innerHTML = "";
 
-            if (window.showGlobalLoader) window.showGlobalLoader();
-
             try {
                 const res = await fetch(`/api/anime/mood/${mood}`);
                 if (!res.ok) throw new Error("Failed to fetch mood");
-                
+
                 const data = await res.json();
-                
+
                 resultsTitle.innerHTML = `Here are some ${moodText} Anime for you!`;
                 renderMoodCards(data);
 
             } catch (err) {
-                console.error("Failed to load mood anime:", err);
-                resultsContainer.innerHTML = `<div class="error-msg" style="text-align:center; padding:40px; color:#ef4444;">Failed to load data. Please try again.</div>`;
-            } finally {
-                if (window.hideGlobalLoader) window.hideGlobalLoader();
+                console.error(err);
+                resultsTitle.textContent = "Oops! Something went wrong. Please try again.";
             }
         });
     });
@@ -54,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderMoodCards(list) {
         gallery.innerHTML = "";
-        
+
         if (!list || list.length === 0) {
             gallery.innerHTML = "<p>No anime found for this mood.</p>";
             return;

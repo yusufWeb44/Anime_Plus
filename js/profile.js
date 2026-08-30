@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 100);
 
   async function loadUserProfile() {
-    if (window.showGlobalLoader) window.showGlobalLoader();
     try {
       const res = await fetch("/api/user/profile");
       const data = await res.json();
@@ -20,14 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("profileUsername").textContent = data.username;
       document.getElementById("profileAvatar").src = data.avatar;
       document.getElementById("profileCover").style.backgroundImage = `url('${data.coverImage}')`;
-      
+
       const joinedDate = new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" });
       document.getElementById("profileJoined").textContent = joinedDate;
 
       // Handle placeholders visually better if absent
       document.getElementById("profileLocation").textContent = data.location || "Not specified";
       document.getElementById("profileBirthday").textContent = data.birthDate || "Not specified";
-      
+
       const bioEl = document.getElementById("profileBio");
       if (data.bio) {
         bioEl.textContent = data.bio;
