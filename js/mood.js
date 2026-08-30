@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsTitle.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Finding ${moodText} Anime...`;
             gallery.innerHTML = "";
 
+            if (window.showGlobalLoader) window.showGlobalLoader();
+
             try {
                 const res = await fetch(`/api/anime/mood/${mood}`);
                 if (!res.ok) throw new Error("Failed to fetch mood");
@@ -36,8 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderMoodCards(data);
 
             } catch (err) {
-                console.error(err);
-                resultsTitle.textContent = "Oops! Something went wrong. Please try again.";
+                console.error("Failed to load mood anime:", err);
+                resultsContainer.innerHTML = `<div class="error-msg" style="text-align:center; padding:40px; color:#ef4444;">Failed to load data. Please try again.</div>`;
+            } finally {
+                if (window.hideGlobalLoader) window.hideGlobalLoader();
             }
         });
     });

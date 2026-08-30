@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 100);
 
   async function loadUserProfile() {
+    if (window.showGlobalLoader) window.showGlobalLoader();
     try {
       const res = await fetch("/api/user/profile");
       const data = await res.json();
