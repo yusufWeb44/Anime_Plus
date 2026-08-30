@@ -733,18 +733,20 @@
   align-items: center;
   justify-content: center;
   gap: 15px;
+  flex-wrap: nowrap !important;
 }
 
 .site-footer .footer-logo {
   height: 40px;
   width: auto;
-  display: block; /* Helps vertical alignment */
+  display: block;
+  transform: translateY(2px); /* Visually align with text due to image padding */
 }
 
 .site-footer p {
   margin: 0;
-  display: flex;
-  align-items: center;
+  white-space: nowrap; /* Keep text on one line */
+
 }
 
 /* Make footer stick to bottom even on short pages */
@@ -886,14 +888,15 @@ body {
 
   /* Footer on mobile: slimmer */
   .site-footer {
-    padding: 16px 20px !important;
-    font-size: 12px !important;
-    gap: 10px !important;
-    flex-wrap: wrap;
+    padding: 16px 10px !important;
+    font-size: 11px !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
   }
 
   .site-footer .footer-logo {
-    height: 28px !important;
+    height: 24px !important;
+    transform: translateY(1px); /* micro-adjustment for mobile */
   }
 
   .site-footer .footer-links {
