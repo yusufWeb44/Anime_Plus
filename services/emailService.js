@@ -1,17 +1,6 @@
-const nodemailer = require("nodemailer");
-
-// ─── Gmail SMTP Transporter ───────────────────────────────────────────────────
-// Uses Gmail App Password (16-char) – set EMAIL_USER and EMAIL_PASS in .env
-// For Gmail App Password: https://myaccount.google.com/apppasswords
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // 16-character App Password (no spaces)
-    },
-  });
-};
+// ─── Email Service ─────────────────────────────────────────────────────────────
+// Uses Brevo HTTP API (works on Render Free - bypasses SMTP port blocks)
+// Required env vars: BREVO_API_KEY, EMAIL_USER (verified sender in Brevo)
 
 // ─── HTML Email Template ──────────────────────────────────────────────────────
 function buildEmailHtml(username, resetUrl) {
@@ -29,7 +18,7 @@ function buildEmailHtml(username, resetUrl) {
             <table width="600" cellpadding="0" cellspacing="0"
               style="background:#ffffff; border-radius:16px; overflow:hidden;
                      box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width:600px; width:100%;">
-              
+
               <!-- Header -->
               <tr>
                 <td align="center"
@@ -63,10 +52,11 @@ function buildEmailHtml(username, resetUrl) {
                     <tr>
                       <td align="center">
                         <a href="${resetUrl}"
-                           style="display:inline-block; background:linear-gradient(135deg, #ac4a92, #8b2f7a);
-                                  color:#ffffff; text-decoration:none; padding:15px 40px;
-                                  border-radius:10px; font-size:16px; font-weight:bold;
-                                  letter-spacing:0.5px;
+                           style="display:inline-block;
+                                  background:linear-gradient(135deg, #ac4a92, #8b2f7a);
+                                  color:#ffffff; text-decoration:none;
+                                  padding:15px 40px; border-radius:10px;
+                                  font-size:16px; font-weight:bold; letter-spacing:0.5px;
                                   box-shadow: 0 4px 15px rgba(172,74,146,0.4);">
                           🔑 Reset My Password
                         </a>
@@ -105,25 +95,43 @@ function buildEmailHtml(username, resetUrl) {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 exports.sendResetPasswordEmail = async (email, username, resetUrl) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error(
-      "Email service is not configured. Please set EMAIL_USER and EMAIL_PASS environment variables."
-    );
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.EMAIL_USER;
+
+  if (!apiKey) {
+    throw new Error("BREVO_API_KEY is not set in environment variables.");
+  }
+  if (!senderEmail) {
+    throw new Error("EMAIL_USER is not set in environment variables.");
   }
 
-  const transporter = createTransporter();
-
-  const fromName = process.env.EMAIL_FROM || "AnimePlus";
-  const fromAddress = process.env.EMAIL_USER;
-
-  const mailOptions = {
-    from: `"${fromName}" <${fromAddress}>`,
-    to: email,
+  const payload = {
+    sender: {
+      name: "AnimePlus",
+      email: senderEmail, // Must be a verified sender in your Brevo account
+    },
+    to: [
+      { email: email },
+    ],
     subject: "🔑 Reset Your Password – AnimePlus",
-    html: buildEmailHtml(username, resetUrl),
+    htmlContent: buildEmailHtml(username, resetUrl),
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`[Email] ✅ Password reset email sent to ${email}. Message ID: ${info.messageId}`);
-  return info;
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API Error (${response.status}): ${errorBody}`);
+  }
+
+  const data = await response.json();
+  console.log(`[Email] ✅ Password reset email sent to ${email} via Brevo. MessageId: ${data.messageId}`);
+  return data;
 };
