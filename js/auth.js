@@ -629,15 +629,8 @@ if (!window.AnimePlusAuthInitialized) {
       const footer = document.createElement("footer");
       footer.className = "site-footer";
       footer.innerHTML = `
-        <div class="footer-brand">Anime+</div>
-        <div class="footer-links">
-          <a href="home.html">Home</a>
-          <a href="series.html">Series</a>
-          <a href="movies.html">Movies</a>
-          <a href="news.html">News</a>
-          <a href="contact.html">Contact Us</a>
-        </div>
-        <p>&copy; ${new Date().getFullYear()} AnimePlus &mdash; All rights reserved. Built with ❤️ for anime fans.</p>
+        <img src="../assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="AnimePlus Logo" class="footer-logo" />
+        <p>&copy; ${new Date().getFullYear()} AnimePlus &mdash; All rights reserved.</p>
       `;
 
       document.body.appendChild(footer);

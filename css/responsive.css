@@ -721,41 +721,31 @@
    FOOTER — Global (all pages, all screen sizes)
    ============================================= */
 .site-footer {
-  background: rgba(20, 5, 20, 0.97);
-  border-top: 1px solid rgba(172, 74, 146, 0.2);
-  padding: 24px 40px;
+  background: transparent;
+  border-top: 1px solid rgba(172, 74, 146, 0.15);
+  padding: 18px 40px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
   letter-spacing: 0.3px;
   line-height: 1.6;
   margin-top: auto;
-}
-
-.site-footer a {
-  color: #ac4a92;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.site-footer a:hover {
-  color: #c956ab;
-}
-
-.site-footer .footer-links {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 10px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.site-footer .footer-brand {
-  font-size: 16px;
-  font-weight: 700;
-  color: #ac4a92;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+.site-footer .footer-logo {
+  height: 28px;
+  width: auto;
+  opacity: 0.5;
+  filter: brightness(0.8);
+}
+
+.site-footer p {
+  margin: 0;
 }
 
 /* Make footer stick to bottom even on short pages */
@@ -791,36 +781,49 @@ body {
     padding: 80px 12px 0 !important;
   }
 
-  .back-to-gallery-btn {
-    font-size: 13px !important;
-    padding: 8px 16px !important;
-    gap: 6px !important;
-    border-radius: 8px !important;
+  /* Target the actual button - class is back-btn in details.html */
+  .back-to-gallery-wrapper .back-btn,
+  .back-to-gallery-wrapper button {
+    font-size: 11px !important;
+    padding: 6px 12px !important;
+    gap: 5px !important;
+    border-radius: 6px !important;
+    height: auto !important;
+    min-height: unset !important;
   }
 
-  .back-to-gallery-btn i {
-    font-size: 13px !important;
+  .back-to-gallery-wrapper .back-btn i,
+  .back-to-gallery-wrapper button i {
+    font-size: 11px !important;
   }
 }
 
 /* =============================================
-   DETAILS PAGE — Categories larger & tighter
+   DETAILS PAGE — Categories (meta-row) larger on mobile
+   Only targets #detailCategories.categories (next to MAL rating)
+   NOT the .category-tags inside anime cards
    ============================================= */
 @media (max-width: 768px) {
-  /* Bigger category tags on details page */
-  .details-page .categories .category-tag,
-  .details-page .category-tags .category-tag {
-    font-size: 12px !important;
-    padding: 5px 12px !important;
+  /* Bigger category tags ONLY inside details page meta-row */
+  .details-page .categories#detailCategories .category-tag {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
     border-radius: 20px !important;
     letter-spacing: 0.2px !important;
   }
 
-  .details-page .categories,
-  .details-page .category-tags {
-    gap: 6px !important;
+  .details-page .categories#detailCategories {
+    gap: 5px !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
+  }
+
+  /* Revert card category-tags (.category-tags) back to original small sizes */
+  .category-tags .category-tag {
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+    letter-spacing: 0 !important;
+    border-radius: unset !important;
   }
 
   /* meta row tighter */
