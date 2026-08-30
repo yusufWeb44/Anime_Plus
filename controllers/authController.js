@@ -175,6 +175,7 @@ exports.googleCallback = async (req, res) => {
     // The frontend will grab it, save it, and clean the URL.
     return res.redirect(`/views/home.html?token=${accessToken}`);
   } catch (err) {
+    console.error("Google OAuth Callback Error:", err);
     return res.redirect("/views/home.html?error=oauth_error");
   }
 };
