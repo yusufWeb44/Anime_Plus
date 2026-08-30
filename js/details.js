@@ -1,7 +1,7 @@
 // js/details.js (Server-backed version)
 
 // ========= DOM Ready =========
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const animeId = urlParams.get("id");
   const animeType = urlParams.get("type");
@@ -22,18 +22,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const backBtn = document.getElementById("backToGallery");
   const trailerBtn = document.getElementById("trailerBtn");
 
-  // Load basic details
-  fetchAnimeDetails(animeType, animeId);
+  if (window.showGlobalLoader) window.showGlobalLoader();
 
-  // Load user actions from server (if logged in)
-  let checks = 0;
-  const interval = setInterval(() => {
-    if (window.AnimePlusAuth?.isAuthLoaded || checks > 40) { // wait up to 2 seconds
-      clearInterval(interval);
-      loadUserActionsUI(animeType, animeId);
-    }
-    checks++;
-  }, 50);
+  try {
+    // Load basic details
+    await fetchAnimeDetails(animeType, animeId);
+
+    // Load user actions from server (if logged in)
+    let checks = 0;
+    const interval = setInterval(() => {
+      if (window.AnimePlusAuth?.isAuthLoaded || checks > 40) { // wait up to 2 seconds
+        clearInterval(interval);
+        loadUserActionsUI(animeType, animeId);
+      }
+      checks++;
+    }, 50);
+
+    // Load related and recommendations sections
+    await loadRelatedContent(animeId, animeType);
+    await loadRecommendationsContent(animeId, animeType);
+  } catch (err) {
+    console.error("Initialization error:", err);
+  } finally {
+    if (window.hideGlobalLoader) window.hideGlobalLoader();
+  }
 
   // Event Listeners
   const dropdownMenu = document.getElementById("watchlistDropdown");
@@ -101,10 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === trailerModal) closeTrailerModal();
     });
   }
-
-  // Load related and recommendations sections
-  loadRelatedContent(animeId, animeType);
-  loadRecommendationsContent(animeId, animeType);
 });
 
 // ========= Fetch anime details from backend =========
@@ -225,7 +233,7 @@ async function fetchAnimeDetails(type, id) {
       if (displayTags) {
         const cats = displayTags.split(",").map((c) => c.trim()).filter(Boolean);
         cats.forEach((cat) => {
-          // Don\'t show \'series\' or \'movies\' as a tag if we have other genres
+          // Don't show 'series' or 'movies' as a tag if we have other genres
           if (cats.length > 1 && (cat.toLowerCase() === "series" || cat.toLowerCase() === "movies")) return;
 
           const span = document.createElement("span");
@@ -242,7 +250,7 @@ async function fetchAnimeDetails(type, id) {
 
 // ========= Server Actions =========
 async function loadUserActionsUI(type, id) {
-  // If we\'re not logged in, we reset the UI
+  // If we're not logged in, we reset the UI
   if (!window.AnimePlusAuth || !window.AnimePlusAuth.isLoggedIn()) {
     applyUIState({ isFavorite: false, isWatchlist: false, rating: null }, type, id);
     return;

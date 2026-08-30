@@ -2661,3 +2661,17 @@ body:not(.details-page) #container {
 @keyframes shimmer {
   to { background-position: 200% center; }
 }
+
+/* =============================================
+   GLOBAL LOADER OVERLAY
+   ============================================= */
+.anime-loader-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #200820; /* Same as body to perfectly hide skeleton */
+  z-index: 999; /* Below navbar (1000) but above content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}

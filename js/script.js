@@ -66,15 +66,33 @@ document.addEventListener("error", (e) => {
 // =====================
 // Helpers
 // =====================
-window.showGlobalLoader = function(containerId) {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = `
+window.showGlobalLoader = function() {
+  let loader = document.getElementById('global-anime-loader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'global-anime-loader';
+    loader.className = 'anime-loader-overlay';
+    loader.innerHTML = `
       <div class="anime-loader-wrapper">
         <div class="anime-spinner"></div>
         <div class="anime-loader-text">Loading...</div>
       </div>
     `;
+    const container = document.getElementById('container');
+    if (container) {
+      container.style.position = 'relative';
+      container.appendChild(loader);
+    } else {
+      document.body.appendChild(loader);
+    }
+  }
+  loader.style.display = 'flex';
+};
+
+window.hideGlobalLoader = function() {
+  const loader = document.getElementById('global-anime-loader');
+  if (loader) {
+    loader.style.display = 'none';
   }
 };
 
@@ -517,7 +535,7 @@ async function initGalleries() {
   else if (airingGallery) { fetchUrl = "/api/airing"; currentContainerId = "airingGallery"; currentType = "airing"; }
 
   if (fetchUrl) {
-    window.showGlobalLoader(currentContainerId);
+    showGlobalLoader(currentContainerId);
     try {
       const res = await fetch(fetchUrl);
       const data = await res.json();
@@ -531,6 +549,8 @@ async function initGalleries() {
       setupFilters(currentContainerId, currentType);
     } catch (err) {
       console.error("Failed to load gallery data:", err);
+    } finally {
+      window.hideGlobalLoader();
     }
   }
 }
