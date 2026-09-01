@@ -254,20 +254,101 @@
     flex-direction: row !important;
     width: 100% !important;
     justify-content: space-between !important;
+    align-items: center !important;
     gap: 10px !important;
-    margin-top: 12px !important;
+    margin-top: 15px !important;
     margin-right: 0 !important;
+    z-index: 10 !important;
   }
 
   .search-box {
     width: 100% !important;
     max-width: none !important;
     flex: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
   }
 
   #search {
     font-size: 14px !important;
     padding-left: 2em !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+  }
+
+  #login-and-search button {
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
+  }
+
+  /* === Top Spacing for Main Titles === */
+  .section-header, 
+  .user-list-header, 
+  .contact-header,
+  .list-header,
+  .mood-header {
+    margin-top: 35px !important;
+  }
+
+  /* === Contact Us Centering === */
+  .contact-section {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 20px 10px !important;
+  }
+  .contact-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 30px !important;
+  }
+  .contact-info {
+    width: 100% !important;
+    align-items: center !important;
+    gap: 15px !important;
+  }
+  .info-card {
+    width: 100% !important;
+    max-width: 350px !important;
+    text-align: center !important;
+  }
+  .contact-form-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .input-row {
+    flex-direction: column !important;
+  }
+
+  /* === Mood Page Fixes === */
+  .mood-back-btn {
+    margin-top: 10px !important;
+    margin-bottom: 30px !important;
+    width: fit-content !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    border-radius: 20px !important;
+    align-self: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .mood-results-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: 20px !important;
+  }
+  .mood-results-title {
+    text-align: center !important;
+    font-size: 24px !important;
+    margin-bottom: 25px !important;
   }
 
   /* === Container === */
