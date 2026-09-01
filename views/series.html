@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/responsive.css" />
+  <link rel="stylesheet" href="../css/responsive.css?v=2" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <title>AnimePlus - Series</title>
@@ -21,6 +21,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+      @media (max-width: 768px) {
+        #login-and-search {
+          order: 3 !important;
+          flex-direction: row !important;
+          width: 100% !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          gap: 10px !important;
+          margin-top: 15px !important;
+          margin-right: 0 !important;
+          z-index: 1000 !important;
+        }
+        .search-box {
+          width: 100% !important;
+          max-width: none !important;
+          flex: 1 !important;
+          position: relative !important;
+          z-index: 1000 !important;
+          display: block !important;
+        }
+        #search {
+          font-size: 14px !important;
+          padding-left: 2em !important;
+          pointer-events: auto !important;
+          width: 100% !important;
+          display: block !important;
+        }
+        #login-and-search button {
+          flex-shrink: 0 !important;
+          z-index: 1000 !important;
+        }
+        h2.section-title {
+          margin-top: 35px !important;
+        }
+      }
+    </style>
 </head>
 
 <body class="series">
