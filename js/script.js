@@ -940,3 +940,47 @@ async function boot() {
 }
 
 document.addEventListener("DOMContentLoaded", boot);
+
+// =====================
+// Mobile Nav Rearrangement
+// =====================
+function setupMobileNav() {
+  if (window.innerWidth > 768) return;
+
+  const navbar         = document.getElementById("navbar");
+  const loginSearch    = document.getElementById("login-and-search");
+  const menu           = document.getElementById("menu");
+  const isHome         = document.body.classList.contains("home");
+
+  if (!navbar || !loginSearch || !menu) return;
+
+  // Find the login/auth button (direct child of #login-and-search, not inside .search-box)
+  const loginBtn = loginSearch.querySelector(":scope > button, :scope > a");
+  const searchBox = loginSearch.querySelector(".search-box");
+
+  // --- 1. Move Login button to sit directly before Menu icon in #navbar ---
+  if (loginBtn && !loginBtn.dataset.mobileMoved) {
+    loginBtn.dataset.mobileMoved = "true";
+    loginBtn.classList.add("mobile-nav-login");
+    navbar.insertBefore(loginBtn, menu);
+  }
+
+  // --- 2. Home page: hide search entirely ---
+  if (isHome) {
+    loginSearch.style.display = "none";
+    return;
+  }
+
+  // --- 3. Other pages: #login-and-search now only contains .search-box ---
+  //    Make it a full-width row below logo+login+menu
+  loginSearch.classList.add("mobile-search-bar");
+}
+
+document.addEventListener("DOMContentLoaded", setupMobileNav);
+window.addEventListener("resize", function () {
+  // Re-run on resize only if crossing the 768px boundary
+  // Simple approach: reload if crossing threshold to avoid stale state
+  if (window.innerWidth <= 768) {
+    setupMobileNav();
+  }
+});

@@ -175,6 +175,29 @@ html.logged-out #login-and-search button {
   transition: 0.3s ease;
 }
 
+/* When JS moves the button to #navbar on mobile, it loses #login-and-search context.
+   Replicate the same styles via the .mobile-nav-login class that JS adds. */
+.mobile-nav-login {
+  height: 36px;
+  padding: 0 20px;
+  background-color: purple;
+  border: 2px solid purple;
+  border-radius: 2em;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+html.logged-in .mobile-nav-login {
+  display: none !important;
+}
+
+html.logged-out .mobile-nav-login {
+  display: block !important;
+}
+
 
 /* =============================================
    MODAL REDESIGN (Glassmorphism & Modern UI)
@@ -1064,9 +1087,14 @@ body.loading-active .site-footer {
 }
 
 @media (max-width: 768px) {
+  /* Reset navbar to a clean row layout */
   #navbar {
-    flex-direction: column;
-    gap: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
   }
 
   #homler ul {
@@ -1076,13 +1104,21 @@ body.loading-active .site-footer {
     justify-content: center;
   }
 
+  /* Row 2: Search box + Login button take full width */
   #login-and-search {
-    flex-direction: column;
-    gap: 15px;
+    order: 3;
+    flex-direction: row;
+    width: 100%;
+    justify-content: stretch;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
   }
 
   .search-box {
-    width: 200px;
+    flex: 1;
+    width: auto;
+    max-width: none;
   }
 
   #menu #menuContent {

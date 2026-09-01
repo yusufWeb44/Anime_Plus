@@ -220,11 +220,18 @@
    ------------------------------------- */
 @media (max-width: 768px) {
 
-  /* === Navbar layout fix === */
+  /* ==========================================
+     MOBILE NAVBAR — Clean 2-row layout
+     Row 1: [Logo]  [Login]  [Menu ☰]
+     Row 2: [Search________________]
+     JS (setupMobileNav) moves Login btn into #navbar
+     ========================================== */
   #navbar {
+    display: flex !important;
     flex-direction: row !important;
-    justify-content: space-between !important;
     flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     padding: 10px 15px !important;
     gap: 0 !important;
     background: rgba(32, 8, 32, 0.98) !important;
@@ -232,58 +239,77 @@
     z-index: 1000 !important;
   }
 
+  /* Logo — left side, flex: 1 fills middle space */
   #logo {
     order: 1 !important;
-  }
-
-  #menu {
-    order: 2 !important;
-    margin-right: 0 !important;
-    margin-top: 5px !important;
+    flex: 1 1 auto !important;
   }
 
   #logo img {
-    height: 55px !important;
-    width: 130px !important;
-    scale: 1 !important;
+    height: 50px !important;
+    width: auto !important;
+    max-width: 120px !important;
   }
 
-  /* === Search & Login row === */
-  #login-and-search {
+  /* Desktop nav links — hidden on mobile */
+  #homler {
+    display: none !important;
+  }
+
+  /* Login button — moved by JS to sit before #menu */
+  /* Only layout props here; appearance comes from original button styles */
+  .mobile-nav-login {
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    margin-right: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Menu hamburger — far right */
+  #menu {
     order: 3 !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+  }
+
+  /* Search bar — full width row 2 (non-home pages) */
+  #login-and-search.mobile-search-bar {
+    order: 4 !important;
+    display: flex !important;
     flex-direction: row !important;
+    flex: 0 0 100% !important;
     width: 100% !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 10px !important;
-    margin-top: 15px !important;
-    margin-right: 0 !important;
+    margin-top: 10px !important;
     z-index: 10 !important;
   }
 
-  .search-box {
+  #login-and-search.mobile-search-bar .search-box {
+    display: flex !important;
+    flex: 1 1 auto !important;
     width: 100% !important;
     max-width: none !important;
-    flex: 1 !important;
     position: relative !important;
-    z-index: 10 !important;
   }
 
-  #search {
-    font-size: 14px !important;
-    padding-left: 2em !important;
-    pointer-events: auto !important;
+  #login-and-search.mobile-search-bar #search {
     width: 100% !important;
+    font-size: 14px !important;
+    padding-left: 2.2em !important;
+    pointer-events: auto !important;
   }
 
-  #login-and-search button {
-    flex-shrink: 0 !important;
-    z-index: 10 !important;
+  /* === Section Titles — bigger & clearer on mobile === */
+  .section-title {
+    font-size: clamp(28px, 7.5vw, 38px) !important;
+    margin-top: 5px !important;
+    margin-bottom: 16px !important;
+    letter-spacing: 0.5px !important;
   }
+
 
   /* === Top Spacing for Main Titles === */
-  .section-header, 
-  .user-list-header, 
+  .section-header,
+  .user-list-header,
   .contact-header,
   .list-header,
   .mood-header {
@@ -495,7 +521,6 @@
   /* === General Typography & Layout === */
   h1,
   h2,
-  .section-title,
   .page-title,
   #detailTitle {
     font-size: 22px !important;
@@ -663,7 +688,6 @@
   }
 
   .section-title {
-    font-size: 18px !important;
     font-weight: 700 !important;
     text-align: left !important;
     margin-left: 0 !important;
@@ -930,11 +954,7 @@ body {
     padding-top: 8px !important;
   }
 
-  /* Section title less margin */
-  .section-title {
-    margin-bottom: 8px !important;
-    margin-top: 0 !important;
-  }
+  /* Section title less margin - removed to prevent overriding main styles */
 
   /* Spotlight bottom margin smaller */
   #spotlight-section {
