@@ -1,15 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=views/home.html" />
-    <title>Redirecting...</title>
-    <meta name="description" content="Redirecting to AnimePlus home page.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnimePlus - Loading...</title>
+  <link rel="stylesheet" href="css/splash.css">
+  <style>
+    /* Ensure the body itself is dark so there's no white flash */
+    body {
+      margin: 0;
+      background-color: #120412;
+      overflow: hidden;
+    }
+  </style>
+  <script>
+    // If the user has already seen the splash screen this session, redirect immediately
+    if (sessionStorage.getItem("animePlus_splashSeen")) {
+      window.location.replace("views/home.html");
+    }
+  </script>
 </head>
-
 <body>
-    <p>If you are not redirected automatically, follow this <a href="views/home.html">link to home.html</a>.</p>
-</body>
+  <div id="splash-screen">
+    <div class="splash-content">
+      <img class="splash-logo" src="assets/images/لقطة_شاشة_2025-06-14_185723-removebg-preview.png" alt="AnimePlus Logo" draggable="false" />
+      <div class="splash-loader-line"></div>
+    </div>
+  </div>
 
+  <script>
+    // If we made it here, the user hasn't seen the splash screen yet.
+    // Wait 3.5 seconds, then fade out and redirect.
+    setTimeout(function() {
+      var splash = document.getElementById("splash-screen");
+      splash.classList.add("splash-fade-out");
+      
+      // Wait for the fade out animation to finish (1 second) before redirecting
+      setTimeout(function() {
+        sessionStorage.setItem("animePlus_splashSeen", "1");
+        window.location.replace("views/home.html");
+      }, 1000);
+      
+    }, 3500);
+  </script>
+</body>
 </html>
