@@ -321,19 +321,25 @@ const getFranchiseIds = async (Anime, AnimeRelation, Op, currentAnime) => {
 
   const safeIds = [];
   if (allVisited.length > 0) {
-    const candidates = await Anime.findAll({
-      where: { id: { [Op.in]: allVisited } },
-      attributes: ['id', 'name']
-    });
+    if (rootWords.size === 0) {
+      // If we couldn't extract any significant words (e.g. name is too short), 
+      // bypass the filter rather than hiding all related content.
+      for (const c of allVisited) safeIds.push(c);
+    } else {
+      const candidates = await Anime.findAll({
+        where: { id: { [Op.in]: allVisited } },
+        attributes: ['id', 'name']
+      });
 
-    for (const c of candidates) {
-      const cWords = getSignificantWords(c.name);
-      // Check if there is at least 1 significant word in common
-      const intersection = [...rootWords].filter(w => cWords.has(w));
-      if (intersection.length > 0) {
-        safeIds.push(c.id);
-      } else {
-        delete relationTypesMap[c.id];
+      for (const c of candidates) {
+        const cWords = getSignificantWords(c.name);
+        // Check if there is at least 1 significant word in common
+        const intersection = [...rootWords].filter(w => cWords.has(w));
+        if (intersection.length > 0) {
+          safeIds.push(c.id);
+        } else {
+          delete relationTypesMap[c.id];
+        }
       }
     }
   }
