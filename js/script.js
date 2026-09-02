@@ -313,16 +313,24 @@ function initSearch() {
   }
 
   searchBox.addEventListener("input", () => {
-    const value = searchBox.value.toLowerCase();
-    document.querySelectorAll(".anime-card").forEach((card) => {
-      const h3 = card.querySelector("h3");
-      const name = (h3 ? h3.textContent : "").toLowerCase();
-      if (name.includes(value)) {
-        card.classList.remove("search-hidden");
-      } else {
-        card.classList.add("search-hidden");
-      }
-    });
+    const value = searchBox.value.toLowerCase().trim();
+    
+    // If we are on a page that uses the main gallery data pipeline (series, movies, etc)
+    if (currentContainerId && currentType) {
+      activeSearchQuery = value;
+      applyFilters(currentContainerId, currentType);
+    } else {
+      // Fallback for pages that don't use the pipeline (userlist, etc)
+      document.querySelectorAll(".anime-card").forEach((card) => {
+        const h3 = card.querySelector("h3");
+        const name = (h3 ? h3.textContent : "").toLowerCase();
+        if (name.includes(value)) {
+          card.classList.remove("search-hidden");
+        } else {
+          card.classList.add("search-hidden");
+        }
+      });
+    }
   });
 }
 
@@ -492,6 +500,7 @@ let currentFilteredData = [];
 let activeSortType = "";
 let sortDirection = -1; // -1 for highest first, 1 for lowest first
 let activeGenre = "";
+let activeSearchQuery = "";
 let currentContainerId = null;
 let currentType = null;
 let isMobileLayout = window.innerWidth <= 768;
@@ -784,16 +793,23 @@ function setupFilters(containerId, type) {
 }
 
 function applyFilters(containerId, type) {
-  // 1. Filter by Genre
-  if (activeGenre) {
-    currentFilteredData = currentGalleryData.filter(anime => {
+  // 1. Filter Data (Genre & Search)
+  currentFilteredData = currentGalleryData.filter(anime => {
+    let matchGenre = true;
+    if (activeGenre) {
       const displayTags = anime.genres || anime.category || "";
       const categories = displayTags.split(",").map(c => c.trim().toLowerCase());
-      return categories.includes(activeGenre.toLowerCase());
-    });
-  } else {
-    currentFilteredData = [...currentGalleryData];
-  }
+      matchGenre = categories.includes(activeGenre.toLowerCase());
+    }
+
+    let matchSearch = true;
+    if (activeSearchQuery) {
+      const title = (anime.name || anime.title || "Unknown").toLowerCase();
+      matchSearch = title.includes(activeSearchQuery);
+    }
+
+    return matchGenre && matchSearch;
+  });
 
   // 2. Sort Data
   if (activeSortType) {
