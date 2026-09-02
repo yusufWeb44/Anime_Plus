@@ -14,7 +14,7 @@ const BLOCKED_TERMS = ["hentai", "ecchi"];
 const normalizeTitle = (title) => {
   return (title || "")
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "")
     .trim();
 };
 

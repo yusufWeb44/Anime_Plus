@@ -308,7 +308,7 @@ const getFranchiseIds = async (Anime, AnimeRelation, Op, currentAnime) => {
   const getSignificantWords = (name) => {
     return new Set(
       name.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, '')
         .split(/\s+/)
         .filter(w => w.length >= 3 && !STOP_WORDS.has(w))
     );
