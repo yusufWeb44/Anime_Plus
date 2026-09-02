@@ -352,12 +352,26 @@ const getFranchiseIds = async (Anime, AnimeRelation, Op, currentAnime) => {
 
 exports.getRelatedAnime = async (req, res) => {
   const { id } = req.params;
+  const { reset } = req.query;
   try {
     const { Anime, AnimeRelation, Op } = require("../models");
 
     const currentAnime = await Anime.findByPk(id);
     if (!currentAnime) {
       return res.status(404).json({ error: "Anime not found" });
+    }
+
+    if (reset === 'true' || reset === '1') {
+      await currentAnime.update({ relationsCheckedAt: null });
+      // Delete existing relations for this anime to fetch fresh ones
+      await AnimeRelation.destroy({
+        where: {
+          [Op.or]: [
+            { sourceAnimeId: currentAnime.id },
+            { targetAnimeId: currentAnime.id }
+          ]
+        }
+      });
     }
 
     // --- JIT Relation Fetching ---
