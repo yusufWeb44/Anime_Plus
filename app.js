@@ -6,6 +6,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const passport = require("passport");
+const compression = require("compression");
 require("./config/passport");
 
 // Import from models (initializes DB and models)
@@ -68,6 +69,7 @@ async function runMigrations() {
 
 runMigrations();
 
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -77,7 +79,9 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, ".")));
+app.use(express.static(path.join(__dirname, "."), {
+  maxAge: '1y' // Aggressive caching for static assets
+}));
 
 app.use(cookieParser());
 app.use(passport.initialize());

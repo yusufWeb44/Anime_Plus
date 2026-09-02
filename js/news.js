@@ -97,7 +97,7 @@ function renderNewsGrid(items) {
         card.innerHTML = `
             <div class="news-img-wrap">
                 <div class="news-badge">${category}</div>
-                <img class="news-img" src="${img}" alt="${item.title}" onerror="this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=640&auto=format&fit=crop'">
+                <img class="news-img" src="${img}" alt="${item.title}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=640&auto=format&fit=crop'">
             </div>
             <div class="news-body">
                 <h3 class="news-title">${item.title}</h3>

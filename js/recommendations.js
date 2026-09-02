@@ -81,7 +81,7 @@ function renderRecCards(list) {
         const isEager = index < 4;
         const posterHtml = typeof getPosterHTML === "function"
             ? getPosterHTML(anime, isEager)
-            : `<img src="${anime.src || "../assets/placeholder-poster.jpg"}" alt="${title}">`;
+            : `<img src="${anime.src || "../assets/placeholder-poster.jpg"}" alt="${title}" loading="lazy" decoding="async">`;
 
         card.innerHTML = `
         ${posterHtml}

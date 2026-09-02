@@ -598,7 +598,7 @@ function renderLocalCards(newDataList, containerId, btnId, stateKey, isAppend) {
     const isEager = !isAppend && (existingCount + i) < 4;
     const posterHtml = typeof getPosterHTML === "function"
       ? getPosterHTML(anime, isEager)
-      : `<img src="${anime.src || anime.image || '../assets/placeholder-poster.jpg'}" alt="${title}">`;
+      : `<img src="${anime.src || anime.image || '../assets/placeholder-poster.jpg'}" alt="${title}" loading="lazy" decoding="async">`;
 
     const card = document.createElement("div");
     card.className = "anime-card";
