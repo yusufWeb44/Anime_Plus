@@ -217,7 +217,11 @@ function initListSearch() {
         document.querySelectorAll(".anime-card").forEach((card) => {
             const h3 = card.querySelector("h3");
             const name = (h3 ? h3.textContent : "").toLowerCase();
-            card.style.display = name.includes(value) ? "block" : "none";
+            if (name.includes(value)) {
+                card.classList.remove("search-hidden");
+            } else {
+                card.classList.add("search-hidden");
+            }
         });
     });
 }
