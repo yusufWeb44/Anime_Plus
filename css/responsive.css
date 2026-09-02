@@ -57,7 +57,7 @@
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(3px) !important;
-    z-index: 999 !important;
+    z-index: 1005 !important;
     /* Ensure it is behind #menuContent (10001) */
     /* DEFAULT: fully hidden and non-interactive */
     opacity: 0 !important;
@@ -280,7 +280,7 @@
     margin: 0 !important;
     pointer-events: auto !important;
     position: relative !important;
-    z-index: 1001 !important;
+    z-index: 1006 !important;
   }
   
   #menuIcon {
