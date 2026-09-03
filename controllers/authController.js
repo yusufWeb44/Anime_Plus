@@ -183,8 +183,9 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Block unverified local accounts
-    if (!user.isVerified) {
+    // Block unverified local accounts (allow admin emails to bypass)
+    const isAdmin = user.role === "admin" || user.email === process.env.ADMIN_EMAIL;
+    if (!user.isVerified && !isAdmin) {
       return res.status(403).json({
         error: "Your email address has not been verified yet. Please check your inbox and click the verification link.",
         requiresVerification: true,
