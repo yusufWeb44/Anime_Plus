@@ -2,6 +2,9 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const { User } = require("../models");
 
+// Debug: confirm env var is loaded (no leading spaces, correct URL)
+console.log("[Passport] Google Callback URL:", process.env.GOOGLE_CALLBACK_URL || "⚠️ NOT SET");
+
 passport.use(
   new GoogleStrategy(
     {

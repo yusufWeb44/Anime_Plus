@@ -27,13 +27,16 @@ async function runMigrations() {
     const tableDesc = await qi.describeTable("Users");
 
     const columnsToAdd = [
-      { name: "googleId",              def: { type: DataTypes.STRING,  allowNull: true } },
-      { name: "coverImage",            def: { type: DataTypes.STRING,  allowNull: true, defaultValue: "../assets/default-cover.jpg" } },
-      { name: "bio",                   def: { type: DataTypes.TEXT,    allowNull: true } },
-      { name: "location",              def: { type: DataTypes.STRING,  allowNull: true } },
+      { name: "googleId",              def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "coverImage",            def: { type: DataTypes.STRING,   allowNull: true, defaultValue: "../assets/default-cover.jpg" } },
+      { name: "bio",                   def: { type: DataTypes.TEXT,     allowNull: true } },
+      { name: "location",              def: { type: DataTypes.STRING,   allowNull: true } },
       { name: "birthDate",             def: { type: DataTypes.DATEONLY, allowNull: true } },
-      { name: "resetPasswordToken",    def: { type: DataTypes.STRING,  allowNull: true } },
-      { name: "resetPasswordExpires",  def: { type: DataTypes.DATE,    allowNull: true } },
+      { name: "resetPasswordToken",    def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "resetPasswordExpires",  def: { type: DataTypes.DATE,     allowNull: true } },
+      // Email verification columns (added in auth refactor)
+      { name: "isVerified",            def: { type: DataTypes.BOOLEAN,  allowNull: false, defaultValue: false } },
+      { name: "verificationToken",     def: { type: DataTypes.STRING,   allowNull: true } },
     ];
 
     for (const col of columnsToAdd) {
@@ -59,6 +62,18 @@ async function runMigrations() {
       console.log("[Migration] Added unique index on googleId");
     } catch (_) {
       // Index already exists, ignore
+    }
+
+    // Data fix: ensure all existing Google OAuth users are marked as verified
+    try {
+      const [rowsUpdated] = await sequelize.query(
+        "UPDATE `Users` SET `isVerified` = 1 WHERE `authProvider` = 'google' AND (`isVerified` = 0 OR `isVerified` IS NULL)"
+      );
+      if (rowsUpdated > 0) {
+        console.log(`[Migration] Marked ${rowsUpdated} existing Google user(s) as verified.`);
+      }
+    } catch (dataFixErr) {
+      console.warn("[Migration] Google user isVerified fix skipped:", dataFixErr.message);
     }
 
     console.log("[Migration] Done.");
