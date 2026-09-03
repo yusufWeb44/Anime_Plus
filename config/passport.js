@@ -17,31 +17,48 @@ passport.use(
             : null;
 
         if (!email) {
-          return done(new Error("No email associated with this Google account."));
+          // Return null user + false to trigger failureRedirect cleanly
+          return done(null, false, { message: "no_email" });
         }
 
-        // 1) Try to find user by googleId
+        const googleAvatar =
+          profile.photos && profile.photos[0]
+            ? profile.photos[0].value
+            : null;
+
+        // ── 1) Find by googleId (returning user) ──────────────────────────────
         let user = await User.findOne({ where: { googleId: profile.id } });
         if (user) {
+          // Refresh avatar in case it changed, and ensure isVerified
+          await user.update(
+            { isVerified: true, avatar: user.avatar || googleAvatar },
+            { validate: false }
+          );
           return done(null, user);
         }
 
-        // 2) Check if email already exists (account linking)
+        // ── 2) Find by email (account linking) ────────────────────────────────
         user = await User.findOne({ where: { email } });
         if (user) {
-          // Link the Google account to existing user
-          user.googleId = profile.id;
-          if (!user.avatar && profile.photos && profile.photos[0]) {
-            user.avatar = profile.photos[0].value;
-          }
-          await user.save();
+          // Link Google to existing account; use update + { validate: false }
+          // to avoid the Sequelize validator throwing on passwordHash = null
+          const updates = {
+            googleId: profile.id,
+            isVerified: true,          // existing local users now verified too
+          };
+          if (!user.avatar && googleAvatar) updates.avatar = googleAvatar;
+
+          await user.update(updates, { validate: false });
           return done(null, user);
         }
 
-        // 3) Create new user - generate a unique username
+        // ── 3) Brand-new user via Google ─────────────────────────────────────
         let baseUsername = profile.displayName
           ? profile.displayName.replace(/\s+/g, "").toLowerCase()
           : email.split("@")[0];
+
+        // Ensure username only contains safe characters
+        baseUsername = baseUsername.replace(/[^a-z0-9_]/g, "").slice(0, 20) || "user";
 
         let uniqueUsername = baseUsername;
         let suffix = 1;
@@ -50,26 +67,25 @@ passport.use(
           suffix++;
         }
 
-        const avatar =
-          profile.photos && profile.photos[0]
-            ? profile.photos[0].value
-            : null;
-
-        user = await User.create({
-          googleId: profile.id,
-          username: uniqueUsername,
-          email,
-          authProvider: "google",
-          avatar,
-          passwordHash: null,
-          isVerified: true,
-        });
+        user = await User.create(
+          {
+            googleId: profile.id,
+            username: uniqueUsername,
+            email,
+            authProvider: "google",
+            avatar: googleAvatar,
+            passwordHash: null,
+            isVerified: true,
+          },
+          { validate: false }   // skip passwordHash length/pattern checks
+        );
 
         return done(null, user);
       } catch (error) {
-        // Log the full error so we can see it in Render logs
         console.error("[Passport Google Strategy ERROR]", error.message, error.stack);
-        return done(error, null);
+        // Return false (not an Error) so Passport triggers failureRedirect
+        // with a generic message instead of a raw 500.
+        return done(null, false, { message: "server_error" });
       }
     }
   )

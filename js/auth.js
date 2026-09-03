@@ -167,9 +167,11 @@ if (!window.AnimePlusAuthInitialized) {
     if (errorParam) {
       setTimeout(() => {
         if (errorParam === "oauth_failed") {
-          window.AnimePlusAuth.showToast("Google Login Failed", "error");
+          window.AnimePlusAuth.showToast("Google sign-in was cancelled or failed. Please try again.", "error");
         } else if (errorParam === "oauth_error") {
-          window.AnimePlusAuth.showToast("An error occurred during Google Login", "error");
+          window.AnimePlusAuth.showToast("Unable to complete sign-in with Google right now. Please try again or use email/password.", "error");
+        } else if (errorParam === "oauth_no_email") {
+          window.AnimePlusAuth.showToast("Your Google account has no email address. Please use a different account.", "error");
         } else if (errorParam === "invalid_token") {
           window.AnimePlusAuth.showToast("Verification link is invalid or has expired. Please register again.", "error");
         } else if (errorParam === "server_error") {

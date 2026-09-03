@@ -121,10 +121,11 @@ exports.register = async (req, res) => {
       requiresVerification: true,
     });
   } catch (err) {
-    if (err.name === "SequelizeValidationError") {
-      return res.status(400).json({ error: "Invalid email format." });
+    if (err.name === "SequelizeValidationError" || err.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({ error: "Please check your details and try again." });
     }
-    return res.status(500).json({ error: err.message });
+    console.error("[register] Error:", err.message);
+    return res.status(500).json({ error: "Unable to create your account right now. Please try again in a moment." });
   }
 };
 
@@ -149,7 +150,7 @@ exports.verifyEmail = async (req, res) => {
 
     user.isVerified = true;
     user.verificationToken = null;
-    await user.save();
+    await user.save({ validate: false });
 
     console.log(`[Auth] ✅ Email verified for user: ${user.email}`);
 
@@ -213,14 +214,15 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error("[login] Error:", err.message);
+    return res.status(500).json({ error: "Unable to sign you in right now. Please try again in a moment." });
   }
 };
 
 // Google OAuth Callback
 exports.googleCallback = async (req, res) => {
   try {
-    const user = req.user; // Provided by passport
+    const user = req.user; // Provided by passport (via custom callback in routes)
 
     if (!user) {
       return res.redirect("/views/home.html?error=oauth_failed");
@@ -235,7 +237,7 @@ exports.googleCallback = async (req, res) => {
     // The frontend will grab it, save it, and clean the URL.
     return res.redirect(`/views/home.html?token=${accessToken}`);
   } catch (err) {
-    console.error("Google OAuth Callback Error:", err);
+    console.error("[googleCallback] Error:", err.message, err.stack);
     return res.redirect("/views/home.html?error=oauth_error");
   }
 };
