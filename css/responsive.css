@@ -380,9 +380,6 @@
     margin-right: auto !important;
   }
   .mood-results-container {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
     margin-top: 20px !important;
   }
   .mood-results-title {
