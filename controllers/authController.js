@@ -55,10 +55,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "Please fill in all the required fields." });
     }
 
-    // Basic email validation regex before hitting the database
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Basic email validation regex before hitting the database (Only allow @gmail.com)
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: "Please enter a valid email address." });
+      return res.status(400).json({ error: "Only valid @gmail.com email addresses are allowed for registration." });
     }
 
     if (password !== confirmPassword) {

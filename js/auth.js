@@ -453,6 +453,13 @@ if (!window.AnimePlusAuthInitialized) {
         const inputs = signupForm.querySelectorAll("input");
         const username = inputs[0].value;
         const email = inputs[1].value;
+        
+        // Frontend validation for @gmail.com requirement
+        if (!email.toLowerCase().endsWith("@gmail.com")) {
+          window.AnimePlusAuth.showToast("Only valid @gmail.com email addresses are allowed for registration.", "error");
+          return;
+        }
+
         const password = inputs[2].value;
         const confirmPassword = inputs[3].value;
 
