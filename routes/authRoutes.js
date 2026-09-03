@@ -14,6 +14,7 @@ router.get("/me", requireAuth, authController.getMe);
 router.post("/revoke-all", requireAuth, authController.revokeAll);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password", authController.resetPassword);
+router.get("/verify-email", authController.verifyEmail);
 
 // Google OAuth
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false, prompt: "select_account" }));

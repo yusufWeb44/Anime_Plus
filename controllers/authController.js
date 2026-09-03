@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { User, RefreshToken, Op } = require("../models");
+const emailService = require("../services/emailService");
 
 const generateTokens = (userId, role) => {
   const accessToken = jwt.sign(
@@ -55,10 +56,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "Please fill in all the required fields." });
     }
 
-    // Basic email validation regex before hitting the database (Only allow @gmail.com)
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    // Standard email validation (any valid domain allowed)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: "Only valid @gmail.com email addresses are allowed for registration." });
+      return res.status(400).json({ error: "Please enter a valid email address." });
     }
 
     if (password !== confirmPassword) {
@@ -84,34 +85,79 @@ exports.register = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Generate a secure email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
     const user = await User.create({
       username,
       email,
       passwordHash,
       authProvider: "local",
+      isVerified: false,
+      verificationToken,
     });
 
-    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
+    // Build verification URL
+    const host = req.get("host");
+    const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : req.protocol;
+    const verifyUrl = `${protocol}://${host}/api/auth/verify-email?token=${verificationToken}`;
 
-    await saveRefreshToken(user.id, refreshToken);
-    setRefreshTokenCookie(res, refreshToken);
+    // Log it in case email fails (for dev/admin)
+    console.log("\n=======================================================");
+    console.log(`📧 EMAIL VERIFICATION LINK FOR ${user.email}:`);
+    console.log(verifyUrl);
+    console.log("=======================================================\n");
 
-    return res.json({
-      message: "Registration successful.",
-      accessToken,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        authProvider: user.authProvider,
-      },
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(user.email, user.username, verifyUrl);
+    } catch (mailErr) {
+      console.warn("⚠️ Verification email sending failed:", mailErr.message);
+      // Don't block registration – user can request resend later
+    }
+
+    return res.status(201).json({
+      message: "Account created! Please check your email inbox to verify your account before logging in.",
+      requiresVerification: true,
     });
   } catch (err) {
     if (err.name === "SequelizeValidationError") {
       return res.status(400).json({ error: "Invalid email format." });
     }
     return res.status(500).json({ error: err.message });
+  }
+};
+
+// Verify Email
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.redirect("/views/home.html?error=invalid_token");
+    }
+
+    const user = await User.findOne({ where: { verificationToken: token } });
+
+    if (!user) {
+      return res.redirect("/views/home.html?error=invalid_token");
+    }
+
+    if (user.isVerified) {
+      return res.redirect("/views/home.html?verified=already");
+    }
+
+    user.isVerified = true;
+    user.verificationToken = null;
+    await user.save();
+
+    console.log(`[Auth] ✅ Email verified for user: ${user.email}`);
+
+    // Redirect to home with a success flag so the frontend can show a login prompt
+    return res.redirect("/views/home.html?verified=true");
+  } catch (err) {
+    console.error("[verifyEmail] Error:", err.message);
+    return res.redirect("/views/home.html?error=server_error");
   }
 };
 
@@ -133,6 +179,14 @@ exports.login = async (req, res) => {
     if (!user.passwordHash) {
       return res.status(401).json({
         error: "This account was created via Google. Please use 'Sign in with Google' or set a password via 'Forgot password'."
+      });
+    }
+
+    // Block unverified local accounts
+    if (!user.isVerified) {
+      return res.status(403).json({
+        error: "Your email address has not been verified yet. Please check your inbox and click the verification link.",
+        requiresVerification: true,
       });
     }
 
@@ -277,8 +331,6 @@ exports.getMe = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
-const emailService = require("../services/emailService");
 
 // Forgot Password
 exports.forgotPassword = async (req, res) => {

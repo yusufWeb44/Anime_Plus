@@ -73,6 +73,17 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: true,
       },
 
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+
+      verificationToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+
       resetPasswordToken: {
         type: DataTypes.STRING,
         allowNull: true,

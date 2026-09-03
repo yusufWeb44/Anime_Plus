@@ -170,10 +170,29 @@ if (!window.AnimePlusAuthInitialized) {
           window.AnimePlusAuth.showToast("Google Login Failed", "error");
         } else if (errorParam === "oauth_error") {
           window.AnimePlusAuth.showToast("An error occurred during Google Login", "error");
+        } else if (errorParam === "invalid_token") {
+          window.AnimePlusAuth.showToast("Verification link is invalid or has expired. Please register again.", "error");
+        } else if (errorParam === "server_error") {
+          window.AnimePlusAuth.showToast("Something went wrong. Please try again.", "error");
         }
         // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }, 500);
+    }
+
+    const verifiedParam = urlParams.get("verified");
+    if (verifiedParam) {
+      setTimeout(() => {
+        if (verifiedParam === "true") {
+          window.AnimePlusAuth.showToast("✅ Email verified successfully! You can now log in.", "success");
+          // Auto-open login modal
+          window.AnimePlusAuth.openLoginModal();
+        } else if (verifiedParam === "already") {
+          window.AnimePlusAuth.showToast("Your account is already verified. Please log in.", "success");
+          window.AnimePlusAuth.openLoginModal();
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 600);
     }
     // ----------------------------
 
@@ -438,6 +457,9 @@ if (!window.AnimePlusAuthInitialized) {
             });
 
             await loadCurrentUser();
+          } else if (res.status === 403 && data.requiresVerification) {
+            // Account exists but email not verified yet
+            window.AnimePlusAuth.showToast("📧 " + (data.error || "Please verify your email before logging in."), "warning");
           } else {
             window.AnimePlusAuth.showToast(data.error || "Login failed", "error");
           }
@@ -453,13 +475,6 @@ if (!window.AnimePlusAuthInitialized) {
         const inputs = signupForm.querySelectorAll("input");
         const username = inputs[0].value;
         const email = inputs[1].value;
-        
-        // Frontend validation for @gmail.com requirement
-        if (!email.toLowerCase().endsWith("@gmail.com")) {
-          window.AnimePlusAuth.showToast("Only valid @gmail.com email addresses are allowed for registration.", "error");
-          return;
-        }
-
         const password = inputs[2].value;
         const confirmPassword = inputs[3].value;
 
@@ -471,25 +486,24 @@ if (!window.AnimePlusAuthInitialized) {
           });
           const data = await res.json();
 
-          if (res.ok) {
-            window.AnimePlusAuth.accessToken = data.accessToken;
-            window.AnimePlusAuth.showToast("Account created successfully!", "success");
-            localStorage.setItem("isLoggedIn", "true");
-            document.documentElement.classList.remove("logged-out");
-            document.documentElement.classList.add("logged-in");
-            
+          if (res.ok && data.requiresVerification) {
+            // Don't auto-login – user must verify their email first
+            window.AnimePlusAuth.showToast(
+              "📧 Account created! Please check your inbox and click the verification link to activate your account.",
+              "success"
+            );
             document.getElementById("loginModal").style.display = "none";
             signupForm.reset();
-            
+
             signupForm.querySelectorAll(".toggle-eye").forEach(eye => {
               eye.classList.remove("fa-eye");
               eye.classList.add("fa-eye-slash");
             });
-            signupForm.querySelectorAll('input[type="text"]').forEach(inp => {
-              if (inp.placeholder.includes("Password")) inp.type = "password";
-            });
-
-            await loadCurrentUser();
+          } else if (res.ok) {
+            // Fallback (future proofing)
+            window.AnimePlusAuth.showToast("Account created successfully!", "success");
+            document.getElementById("loginModal").style.display = "none";
+            signupForm.reset();
           } else {
             window.AnimePlusAuth.showToast(data.error || "Signup failed", "error");
           }

@@ -62,6 +62,7 @@ passport.use(
           authProvider: "google",
           avatar,
           passwordHash: null,
+          isVerified: true,
         });
 
         return done(null, user);
