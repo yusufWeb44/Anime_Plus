@@ -33,7 +33,14 @@ if (!window.AnimePlusAuthInitialized) {
       const loginform = document.getElementById("loginform");
       const signupform = document.getElementById("signupform");
       const itm = document.getElementById("items");
-      
+      const forgotform = document.getElementById("forgotform");
+
+      // Always reset forgot password form state before opening
+      if (forgotform) {
+        forgotform.style.display = "none";
+        forgotform.reset();
+      }
+
       if (modal) modal.style.display = "flex";
       if (loginform) loginform.style.display = "block";
       if (signupform) signupform.style.display = "none";
@@ -582,6 +589,12 @@ if (!window.AnimePlusAuthInitialized) {
           
           // Setup event handlers
           forgotForm.querySelector(".close").addEventListener("click", () => {
+            // Reset modal state back to login view before closing
+            forgotForm.style.display = "none";
+            forgotForm.reset();
+            if (loginForm) loginForm.style.display = "block";
+            if (itemsContainer) itemsContainer.style.display = "block";
+            // Now close the modal
             const modal = document.getElementById("loginModal");
             if (modal) modal.style.display = "none";
           });
