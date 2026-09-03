@@ -350,10 +350,17 @@ function initMenuAndModal() {
 
   if (loginBtn && modal) {
     loginBtn.addEventListener("click", () => {
-      modal.style.display = "flex";
-      if (loginform) loginform.style.display = "block";
-      if (signupform) signupform.style.display = "none";
-      if (itm) itm.style.display = "block";
+      if (window.AnimePlusAuth && typeof window.AnimePlusAuth.openLoginModal === "function") {
+        window.AnimePlusAuth.openLoginModal();
+      } else {
+        // Fallback just in case auth.js hasn't loaded yet
+        modal.style.display = "flex";
+        if (loginform) loginform.style.display = "block";
+        if (signupform) signupform.style.display = "none";
+        if (itm) itm.style.display = "block";
+        const forgotform = document.getElementById("forgotform");
+        if (forgotform) forgotform.style.display = "none";
+      }
     });
   }
 
