@@ -143,9 +143,9 @@ function showSpotlight(i) {
   if (!bg || !title || !poster) return;
 
   let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
-  // Upgrade AniList image quality if possible
+  // Upgrade AniList image quality to extraLarge for retina screens
   if (img.includes("anilistcdn") && img.includes("/cover/")) {
-    img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
+    img = img.replace("/medium/", "/extraLarge/").replace("/large/", "/extraLarge/").replace("/small/", "/extraLarge/");
   }
   const bgImg = anime.bannerImage || img;
   const name = anime.name || anime.title || "Unknown";
@@ -255,7 +255,7 @@ async function loadHomeFeaturedSlider() {
     const anime = spotlightData[0];
     let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
     if (img.includes("anilistcdn") && img.includes("/cover/")) {
-      img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
+      img = img.replace("/medium/", "/extraLarge/").replace("/large/", "/extraLarge/").replace("/small/", "/extraLarge/");
     }
     const bgImg = anime.bannerImage || img;
     
