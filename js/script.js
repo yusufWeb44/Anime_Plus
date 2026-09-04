@@ -66,7 +66,7 @@ document.addEventListener("error", (e) => {
 // =====================
 // Helpers
 // =====================
-window.showGlobalLoader = function() {
+window.showGlobalLoader = function () {
   let loader = document.getElementById('global-anime-loader');
   if (!loader) {
     loader = document.createElement('div');
@@ -89,7 +89,7 @@ window.showGlobalLoader = function() {
   document.body.classList.add('loading-active');
 };
 
-window.hideGlobalLoader = function() {
+window.hideGlobalLoader = function () {
   const loader = document.getElementById('global-anime-loader');
   if (loader) {
     loader.style.display = 'none';
@@ -143,9 +143,9 @@ function showSpotlight(i) {
   if (!bg || !title || !poster) return;
 
   let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
-  // Upgrade AniList image quality to extraLarge for retina screens
+  // Upgrade AniList image quality if possible
   if (img.includes("anilistcdn") && img.includes("/cover/")) {
-    img = img.replace("/medium/", "/extraLarge/").replace("/large/", "/extraLarge/").replace("/small/", "/extraLarge/");
+    img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
   }
   const bgImg = anime.bannerImage || img;
   const name = anime.name || anime.title || "Unknown";
@@ -255,10 +255,10 @@ async function loadHomeFeaturedSlider() {
     const anime = spotlightData[0];
     let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
     if (img.includes("anilistcdn") && img.includes("/cover/")) {
-      img = img.replace("/medium/", "/extraLarge/").replace("/large/", "/extraLarge/").replace("/small/", "/extraLarge/");
+      img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
     }
     const bgImg = anime.bannerImage || img;
-    
+
     const bg = document.querySelector(".spotlight-bg");
     if (bg) bg.style.backgroundImage = `url(${bgImg})`;
 
@@ -325,7 +325,7 @@ function initSearch() {
 
   searchBox.addEventListener("input", () => {
     const value = searchBox.value.toLowerCase().trim();
-    
+
     // If we are on a page that uses the main gallery data pipeline (series, movies, etc)
     if (currentContainerId && currentType) {
       activeSearchQuery = value;
@@ -527,7 +527,7 @@ window.addEventListener('resize', () => {
   const newIsMobile = window.innerWidth <= 768;
   if (isMobileLayout !== newIsMobile) {
     isMobileLayout = newIsMobile;
-    
+
     if (currentContainerId && currentType && currentFilteredData.length > 0) {
       if (isMobileLayout) {
         renderMobileRows(currentFilteredData, currentContainerId, currentType);
