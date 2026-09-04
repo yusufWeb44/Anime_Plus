@@ -142,7 +142,12 @@ function showSpotlight(i) {
 
   if (!bg || !title || !poster) return;
 
-  const img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
+  let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
+  // Upgrade AniList image quality if possible
+  if (img.includes("anilistcdn") && img.includes("/cover/")) {
+    img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
+  }
+  const bgImg = anime.bannerImage || img;
   const name = anime.name || anime.title || "Unknown";
   const description = anime.description || "No description available.";
   const ratingVal = anime.rating || "N/A";
@@ -158,7 +163,8 @@ function showSpotlight(i) {
 
   setTimeout(() => {
     // Update content
-    bg.style.backgroundImage = `url(${img})`;
+    // Update content
+    bg.style.backgroundImage = `url(${bgImg})`;
     title.textContent = name;
     desc.textContent = description;
     poster.src = img;
@@ -247,9 +253,14 @@ async function loadHomeFeaturedSlider() {
 
     // Set initial content without animation
     const anime = spotlightData[0];
-    const img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
+    let img = anime.srcLarge || anime.src || anime.image || "../assets/placeholder-poster.jpg";
+    if (img.includes("anilistcdn") && img.includes("/cover/")) {
+      img = img.replace("/medium/", "/large/").replace("/small/", "/large/");
+    }
+    const bgImg = anime.bannerImage || img;
+    
     const bg = document.querySelector(".spotlight-bg");
-    if (bg) bg.style.backgroundImage = `url(${img})`;
+    if (bg) bg.style.backgroundImage = `url(${bgImg})`;
 
     const title = document.querySelector(".spotlight-title");
     if (title) title.textContent = anime.name || anime.title || "Unknown";

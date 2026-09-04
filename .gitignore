@@ -83,7 +83,3 @@ typings/
 # OS metadata
 .DS_Store
 Thumbs.db
-
-# Local Database Scripts 
-exportRelations.js
-importRelations.js
