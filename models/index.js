@@ -10,6 +10,14 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || "localhost",
     dialect: "mysql",
     logging: false,
+    hooks: {
+      beforeDefine: (attributes, options) => {
+        // Enforce lowercase, explicitly declared table names for 100% OS compatibility
+        const { Utils } = require("sequelize");
+        const pluralName = Utils.pluralize(options.modelName);
+        options.tableName = pluralName.toLowerCase();
+      }
+    }
   }
 );
 
