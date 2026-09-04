@@ -19,29 +19,30 @@ async function runMigrations() {
     await sequelize.authenticate();
     console.log("Database connected...");
 
-    // Create any missing tables (e.g., RefreshTokens) safely without altering existing ones
+    // Create any missing tables safely without altering existing ones
     await sequelize.sync({ alter: false });
     console.log("[Migration] Ensured all missing tables are created.");
 
     const qi = sequelize.getQueryInterface();
-    const tableDesc = await qi.describeTable("Users");
+    // استخدام users بالحروف الصغيرة
+    const tableDesc = await qi.describeTable("users");
 
     const columnsToAdd = [
-      { name: "googleId",              def: { type: DataTypes.STRING,   allowNull: true } },
-      { name: "coverImage",            def: { type: DataTypes.STRING,   allowNull: true, defaultValue: "../assets/default-cover.jpg" } },
-      { name: "bio",                   def: { type: DataTypes.TEXT,     allowNull: true } },
-      { name: "location",              def: { type: DataTypes.STRING,   allowNull: true } },
-      { name: "birthDate",             def: { type: DataTypes.DATEONLY, allowNull: true } },
-      { name: "resetPasswordToken",    def: { type: DataTypes.STRING,   allowNull: true } },
-      { name: "resetPasswordExpires",  def: { type: DataTypes.DATE,     allowNull: true } },
+      { name: "googleId",             def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "coverImage",           def: { type: DataTypes.STRING,   allowNull: true, defaultValue: "../assets/default-cover.jpg" } },
+      { name: "bio",                  def: { type: DataTypes.TEXT,     allowNull: true } },
+      { name: "location",             def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "birthDate",            def: { type: DataTypes.DATEONLY, allowNull: true } },
+      { name: "resetPasswordToken",   def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "resetPasswordExpires", def: { type: DataTypes.DATE,     allowNull: true } },
       // Email verification columns (added in auth refactor)
-      { name: "isVerified",            def: { type: DataTypes.BOOLEAN,  allowNull: false, defaultValue: false } },
-      { name: "verificationToken",     def: { type: DataTypes.STRING,   allowNull: true } },
+      { name: "isVerified",           def: { type: DataTypes.BOOLEAN,  allowNull: false, defaultValue: false } },
+      { name: "verificationToken",    def: { type: DataTypes.STRING,   allowNull: true } },
     ];
 
     for (const col of columnsToAdd) {
       if (!tableDesc[col.name]) {
-        await qi.addColumn("Users", col.name, col.def);
+        await qi.addColumn("users", col.name, col.def);
         console.log(`[Migration] Added column: ${col.name}`);
       }
     }
@@ -49,7 +50,7 @@ async function runMigrations() {
     // Fix authProvider ENUM to include 'google' if missing
     try {
       await sequelize.query(
-        "ALTER TABLE `Users` MODIFY COLUMN `authProvider` ENUM('local','google') NOT NULL DEFAULT 'local'"
+        "ALTER TABLE `users` MODIFY COLUMN `authProvider` ENUM('local','google') NOT NULL DEFAULT 'local'"
       );
       console.log("[Migration] Ensured authProvider ENUM includes 'google'.");
     } catch (enumErr) {
@@ -58,7 +59,7 @@ async function runMigrations() {
 
     // Add unique index on googleId if not exists
     try {
-      await qi.addIndex("Users", ["googleId"], { unique: true, name: "users_google_id" });
+      await qi.addIndex("users", ["googleId"], { unique: true, name: "users_google_id" });
       console.log("[Migration] Added unique index on googleId");
     } catch (_) {
       // Index already exists, ignore
@@ -67,7 +68,7 @@ async function runMigrations() {
     // Data fix: ensure all existing Google OAuth users are marked as verified
     try {
       const [rowsUpdated] = await sequelize.query(
-        "UPDATE `Users` SET `isVerified` = 1 WHERE `authProvider` = 'google' AND (`isVerified` = 0 OR `isVerified` IS NULL)"
+        "UPDATE `users` SET `isVerified` = 1 WHERE `authProvider` = 'google' AND (`isVerified` = 0 OR `isVerified` IS NULL)"
       );
       if (rowsUpdated > 0) {
         console.log(`[Migration] Marked ${rowsUpdated} existing Google user(s) as verified.`);
@@ -77,13 +78,14 @@ async function runMigrations() {
     }
 
     console.log("[Migration] Done.");
+
+    // طباعة عدد الأنمي للتحقق
+    const [results] = await sequelize.query("SELECT COUNT(*) AS count FROM animes");
+    console.log(">>> TOTAL ANIMES IN DB:", results[0].count);
+
   } catch (err) {
     console.error("[Migration Error]", err.message);
   }
-
-  // أضف هذا الجزء قبل نهاية دالة runMigrations
-    const [results] = await sequelize.query("SELECT COUNT(*) AS count FROM Animes");
-    console.log(">>> TOTAL ANIMES IN DB:", results[0].count);
 }
 
 runMigrations();
@@ -113,7 +115,6 @@ const longTermCacheOptions = {
   maxAge: '1y',
   immutable: true,
   setHeaders: (res, path) => {
-    // Override the global cache-busting headers for these specific assets
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   }
 };
@@ -182,4 +183,3 @@ process.on("uncaughtException", (err) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/views/home.html`);
 });
-
