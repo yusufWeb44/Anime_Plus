@@ -80,6 +80,10 @@ async function runMigrations() {
   } catch (err) {
     console.error("[Migration Error]", err.message);
   }
+
+  // أضف هذا الجزء قبل نهاية دالة runMigrations
+    const [results] = await sequelize.query("SELECT COUNT(*) AS count FROM Animes");
+    console.log(">>> TOTAL ANIMES IN DB:", results[0].count);
 }
 
 runMigrations();
@@ -94,9 +98,47 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, "."), {
-  maxAge: '1y' // Aggressive caching for static assets
-}));
+// --- Cache-Busting Middleware ---
+// Applies globally. Dynamic API routes and HTML endpoints will inherit this.
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, private");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
+// --- Refactored Static Asset Caching ---
+// 1. Long-term caching for immutable static assets (images, fonts, css, etc.)
+const longTermCacheOptions = {
+  maxAge: '1y',
+  immutable: true,
+  setHeaders: (res, path) => {
+    // Override the global cache-busting headers for these specific assets
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  }
+};
+app.use("/assets", express.static(path.join(__dirname, "assets"), longTermCacheOptions));
+app.use("/css", express.static(path.join(__dirname, "css"), longTermCacheOptions));
+if (require("fs").existsSync(path.join(__dirname, "public"))) {
+  app.use("/public", express.static(path.join(__dirname, "public"), longTermCacheOptions));
+}
+
+// 2. No caching for HTML views and client-side JS controllers
+const noCacheOptions = {
+  maxAge: 0,
+  setHeaders: (res, path) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+};
+app.use("/views", express.static(path.join(__dirname, "views"), noCacheOptions));
+app.use("/js", express.static(path.join(__dirname, "js"), noCacheOptions));
+
+// 3. Explicit route for index.html to prevent serving the entire root directory
+app.get("/index.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -140,3 +182,4 @@ process.on("uncaughtException", (err) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/views/home.html`);
 });
+
