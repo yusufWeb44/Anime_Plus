@@ -1350,7 +1350,6 @@
           },
           "response": []
         },
-
         {
           "name": "Import Related Anime (استيراد الأنميات المرتبطة)",
           "request": {
@@ -1391,6 +1390,86 @@
             "description": "Each run processes the next internal batch and imports missing related anime and relationships."
           },
           "response": []
+        },
+        {
+          "name": "Start Fill Missing Trailers (بدء جلب التريلرات الناقصة)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/maintenance/fill-trailers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "fill-trailers"
+              ]
+            },
+            "description": "يبدأ مهمة في الخلفية للبحث عن تريلرات الأنميات الناقصة في يوتيوب وحفظها"
+          }
+        },
+        {
+          "name": "Get Fill Trailers Status (حالة جلب التريلرات)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/maintenance/fill-trailers/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "fill-trailers",
+                "status"
+              ]
+            },
+            "description": "معرفة عدد التريلرات التي تم جلبها وحالة المعالجة الحالية"
+          }
+        },
+        {
+          "name": "Stop Fill Missing Trailers (إيقاف جلب التريلرات)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/maintenance/fill-trailers/stop",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "maintenance",
+                "fill-trailers",
+                "stop"
+              ]
+            },
+            "description": "إيقاف مهمة جلب التريلرات"
+          }
         }
       ]
     }
