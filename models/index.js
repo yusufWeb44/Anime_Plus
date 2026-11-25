@@ -2,6 +2,8 @@ const { Sequelize, DataTypes, Op } = require("sequelize");
 
 require("dotenv").config();
 
+const isRemoteDB = process.env.DB_HOST && process.env.DB_HOST !== "localhost" && process.env.DB_HOST !== "127.0.0.1";
+
 const sequelize = new Sequelize(
   process.env.DB_NAME || "anime_plus", 
   process.env.DB_USER || "root", 
@@ -11,6 +13,14 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 3306,
     dialect: "mysql",
     logging: false,
+    ...(isRemoteDB && {
+      dialectOptions: {
+        ssl: {
+          minVersion: "TLSv1.2",
+          rejectUnauthorized: true
+        }
+      }
+    }),
     hooks: {
       beforeDefine: (attributes, options) => {
         // Enforce lowercase, explicitly declared table names for 100% OS compatibility
