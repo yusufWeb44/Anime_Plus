@@ -122,34 +122,26 @@ exports.importAiring = async (count = 25) => {
 };
 
 /**
- * Imports classic anime with persistent pagination progress.
- * Each execution resumes from where the previous one left off.
+ * Imports classic anime (2005-2012) with persistent pagination progress.
+ * Fetches 1 page (up to 50 anime) per run, rotating across year ranges
+ * in round-robin order so all periods are imported evenly.
  * Progress is stored in the ClassicImportProgress table.
  */
 exports.importClassics = async () => {
   // ── Configuration ──────────────────────────────────────────────────────────
-  const CLASSICS_PAGES_PER_RUN = 3;  // pages to process per range per run
-  const CLASSICS_PER_PAGE      = 50; // AniList max is 50
+  const CLASSICS_PER_PAGE = 50; // Total anime per batch/run (AniList max is 50)
 
-  // All supported year ranges, from newest classic to oldest
+  // Supported classic year ranges (2005-2012), from newest to oldest
   const YEAR_RANGES = [
     { startYear: 2011, endYear: 2012, key: "2011-2012" },
     { startYear: 2009, endYear: 2010, key: "2009-2010" },
     { startYear: 2007, endYear: 2008, key: "2007-2008" },
     { startYear: 2005, endYear: 2006, key: "2005-2006" },
-    { startYear: 2001, endYear: 2004, key: "2001-2004" },
-    { startYear: 1996, endYear: 2000, key: "1996-2000" },
-    { startYear: 1990, endYear: 1995, key: "1990-1995" },
-    { startYear: 1985, endYear: 1989, key: "1985-1989" },
-    { startYear: 1980, endYear: 1984, key: "1980-1984" },
-    { startYear: 1975, endYear: 1979, key: "1975-1979" },
-    { startYear: 1970, endYear: 1974, key: "1970-1974" },
-    { startYear: 1900, endYear: 1969, key: "1900-1969" },
   ];
 
   const { ClassicImportProgress } = require("../models");
 
-  console.log(`[Ingestion] Starting Classics Import (${CLASSICS_PAGES_PER_RUN} pages/range per run)...`);
+  console.log(`[Ingestion] Starting Classics Import (max ${CLASSICS_PER_PAGE} anime per run, round-robin 2005-2012)...`);
 
   const totals = {
     rangesProcessed:  0,
@@ -163,90 +155,94 @@ exports.importClassics = async () => {
     completed:        false,
   };
 
-  let allRangesCompleted = true;
-
-  for (const range of YEAR_RANGES) {
-    // Load or create progress record for this range
-    let [progress] = await ClassicImportProgress.findOrCreate({
+  // Ensure progress records exist for all configured ranges and collect incomplete ones
+  const incompleteCandidates = [];
+  for (let idx = 0; idx < YEAR_RANGES.length; idx++) {
+    const range = YEAR_RANGES[idx];
+    const [progress] = await ClassicImportProgress.findOrCreate({
       where: { rangeKey: range.key },
       defaults: { rangeKey: range.key, nextPage: 1, completed: false },
     });
 
-    // Skip already-exhausted ranges
-    if (progress.completed) {
-      console.log(`[Ingestion][Classics] Range ${range.key} already completed — skipping.`);
-      continue;
+    if (!progress.completed) {
+      incompleteCandidates.push({ range, progress, order: idx });
     }
-
-    allRangesCompleted = false;
-    totals.rangesProcessed++;
-
-    let currentPage = progress.nextPage;
-    let pagesThisRun = 0;
-
-    while (pagesThisRun < CLASSICS_PAGES_PER_RUN) {
-      try {
-        const result = await anilistService.getClassicsPage(
-          range.startYear,
-          range.endYear,
-          currentPage,
-          CLASSICS_PER_PAGE
-        );
-
-        totals.pagesFetched++;
-        pagesThisRun++;
-        totals.fetched += result.media.length;
-
-        for (const item of result.media) {
-          // Secondary content guard
-          const genresLower = (item.genres || "").toLowerCase();
-          const blockedTerm = BLOCKED_TERMS.find((t) => genresLower.includes(t));
-          if (blockedTerm) {
-            console.log(`[Ingestion][Classics] Blocked "${item.name}" — ${blockedTerm}`);
-            totals.blocked++;
-            continue;
-          }
-
-          const res = await syncAnimeRecord(item);
-          if (res.status === "created")   totals.created++;
-          else if (res.status === "updated")   totals.updated++;
-          else if (res.status === "unchanged") totals.unchanged++;
-          else totals.errors++;
-        }
-
-        if (!result.hasNextPage) {
-          // No more pages for this range
-          console.log(`[Ingestion][Classics] Range ${range.key} exhausted at page ${currentPage}.`);
-          await progress.update({ nextPage: currentPage + 1, completed: true });
-          break;
-        }
-
-        currentPage++;
-        await progress.update({ nextPage: currentPage });
-
-        // Respect AniList rate limits between pages
-        await sleep(1500);
-
-      } catch (error) {
-        console.error(`[Ingestion][Classics] Error on range ${range.key} page ${currentPage}:`, error.message);
-        totals.errors++;
-        break;
-      }
-    }
-
-    // Respect rate limits between ranges
-    await sleep(1500);
   }
 
-  // Check if ALL ranges are now completed
-  const incomplete = await ClassicImportProgress.count({ where: { completed: false } });
-  if (incomplete === 0 && YEAR_RANGES.length > 0) {
-    // Check if all our ranges have a row
-    const total = await ClassicImportProgress.count();
-    if (total >= YEAR_RANGES.length) {
-      totals.completed = true;
-      console.log(`[Ingestion][Classics] All ranges exhausted. Full classic library imported!`);
+  // Round-robin: pick the incomplete range with the lowest nextPage (tie-break by YEAR_RANGES order)
+  incompleteCandidates.sort((a, b) => {
+    if (a.progress.nextPage !== b.progress.nextPage) {
+      return a.progress.nextPage - b.progress.nextPage;
     }
+    return a.order - b.order;
+  });
+
+  for (const candidate of incompleteCandidates) {
+    const { range, progress } = candidate;
+    const currentPage = progress.nextPage;
+    totals.rangesProcessed++;
+
+    try {
+      const result = await anilistService.getClassicsPage(
+        range.startYear,
+        range.endYear,
+        currentPage,
+        CLASSICS_PER_PAGE
+      );
+
+      totals.pagesFetched++;
+      totals.fetched += result.media.length;
+
+      for (const item of result.media) {
+        // Secondary content guard
+        const genresLower = (item.genres || "").toLowerCase();
+        const blockedTerm = BLOCKED_TERMS.find((t) => genresLower.includes(t));
+        if (blockedTerm) {
+          console.log(`[Ingestion][Classics] Blocked "${item.name}" — ${blockedTerm}`);
+          totals.blocked++;
+          continue;
+        }
+
+        const res = await syncAnimeRecord(item);
+        if (res.status === "created")   totals.created++;
+        else if (res.status === "updated")   totals.updated++;
+        else if (res.status === "unchanged") totals.unchanged++;
+        else totals.errors++;
+      }
+
+      if (!result.hasNextPage) {
+        console.log(`[Ingestion][Classics] Range ${range.key} exhausted at page ${currentPage}.`);
+        await progress.update({ nextPage: currentPage + 1, completed: true });
+      } else {
+        await progress.update({ nextPage: currentPage + 1 });
+      }
+
+      // Stop after fetching one page (up to 50 anime per run) unless this range is completely empty
+      if (result.media.length > 0 || result.hasNextPage) {
+        break;
+      }
+
+      // If this range ended with 0 items, wait briefly and try the next incomplete range
+      await sleep(1500);
+    } catch (error) {
+      console.error(`[Ingestion][Classics] Error on range ${range.key} page ${currentPage}:`, error.message);
+      totals.errors++;
+      break;
+    }
+  }
+
+  // Check if ALL configured ranges (2005-2012) are now completed
+  const activeKeys = YEAR_RANGES.map((r) => r.key);
+  const incompleteCount = await ClassicImportProgress.count({
+    where: {
+      rangeKey: { [Op.in]: activeKeys },
+      completed: false,
+    },
+  });
+
+  if (incompleteCount === 0 && YEAR_RANGES.length > 0) {
+    totals.completed = true;
+    console.log(`[Ingestion][Classics] All ranges (2005-2012) exhausted. Full classic library imported!`);
   }
 
   console.log(`[Ingestion] Finished Classics Import. Results:`, totals);
